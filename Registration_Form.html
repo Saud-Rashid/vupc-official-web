@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programming Contest — Registration | VU CSE</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --primary:#0056b3;
+  --primary-light:#3b82f6;
+  --accent:#e63946;
+  --bg-dark:#0b132b;
+  --bg-card:#1c2541;
+  --bg-input:#0f172a;
+  --text-main:#f8fafc;
+  --text-muted:#94a3b8;
+  --border-color:rgba(255,255,255,.12);
+  --success:#10b981;
+  --font-main:'Plus Jakarta Sans',-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+
+  --pA:#ff6b6b; --pA-tint:rgba(255,107,107,.14);
+  --pB:#ffa94d; --pB-tint:rgba(255,169,77,.14);
+  --pC:#51cf66; --pC-tint:rgba(81,207,102,.14);
+  --pD:#4dabf7; --pD-tint:rgba(77,171,247,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-main);background:var(--bg-dark);color:var(--text-main);line-height:1.6;overflow-x:hidden;}
+
+/* Navbar */
+.navbar{position:fixed;top:0;left:0;width:100%;background:rgba(11,19,43,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-color);z-index:1000;padding:.8rem 0;}
+.nav-container{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;}
+.brand-logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;}
+.logo-icon{background:var(--accent);width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.logo-text{display:flex;flex-direction:column;}
+.logo-text .brand{font-weight:800;font-size:1.05rem;}
+.logo-text .dept{font-size:.7rem;color:var(--text-muted);}
+.nav-link{color:var(--text-muted);text-decoration:none;font-weight:500;font-size:.92rem;transition:.2s;}
+.nav-link:hover{color:#fff;}
+.btn-nav{background:var(--primary);color:#fff!important;padding:8px 18px;border-radius:6px;font-weight:600;}
+.nav-menu{display:flex;align-items:center;gap:24px;}
+
+/* Hero */
+.hero-section{padding:150px 20px 70px;text-align:center;background:radial-gradient(circle at 50% 15%,#1c2541 0%,#0b132b 78%);}
+.hero-container{max-width:820px;margin:0 auto;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,86,179,.2);border:1px solid rgba(0,86,179,.5);color:#60a5fa;padding:6px 16px;border-radius:30px;font-size:.82rem;font-weight:600;margin-bottom:22px;font-family:var(--font-mono);}
+.hero-title{font-size:2.6rem;font-weight:800;line-height:1.25;margin-bottom:16px;letter-spacing:-.5px;}
+.hero-title .accent{color:var(--accent);}
+.hero-subtitle{font-size:1.02rem;color:var(--text-muted);max-width:640px;margin:0 auto 30px;}
+.hero-meta{font-family:var(--font-mono);font-size:.8rem;color:#60a5fa;margin-bottom:30px;}
+
+.notice{border-top:1px solid rgba(0,86,179,.3);border-bottom:1px solid rgba(0,86,179,.3);padding:15px 20px;}
+.notice-container{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:15px;font-size:.9rem;flex-wrap:wrap;}
+.notice-badge{background:var(--primary);color:#fff;padding:4px 12px;border-radius:4px;font-size:.78rem;font-weight:700;white-space:nowrap;font-family:var(--font-mono);}
+.notice p{color:var(--text-muted);}
+
+/* Registration section */
+.registration-section{padding:80px 20px;background:rgba(28,37,65,.4);}
+.form-wrapper{max-width:760px;margin:0 auto;background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:40px;}
+.form-header{text-align:center;margin-bottom:30px;}
+.form-header .tag{display:inline-flex;align-items:center;gap:6px;background:rgba(230,57,70,.15);border:1px solid rgba(230,57,70,.4);color:#ff8a94;padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:700;font-family:var(--font-mono);margin-bottom:14px;}
+.form-header h2{font-size:1.6rem;font-weight:700;margin-bottom:6px;}
+.form-header p{color:var(--text-muted);font-size:.92rem;}
+
+/* Stepper */
+.stepper{display:flex;align-items:center;gap:6px;margin-bottom:34px;}
+.step-btn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;}
+.step-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:.85rem;border:2px solid var(--border-color);color:var(--text-muted);background:var(--bg-input);transition:.2s;}
+.step-dot.active{transform:scale(1.08);}
+.step-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:none;}
+@media(min-width:560px){.step-label{display:block;}}
+.step-line{flex:1;height:2px;background:var(--border-color);margin-bottom:20px;}
+@media(min-width:560px){.step-line{margin-bottom:24px;}}
+
+.step-card-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:.8rem;}
+.step-title-row{display:flex;align-items:center;gap:10px;margin-bottom:26px;}
+.step-title-row h3{font-size:1.15rem;font-weight:700;}
+
+/* Form fields */
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.input-group.full-width{grid-column:span 2;}
+.input-group label{display:block;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:8px;}
+.input-group .required{color:var(--accent);}
+.input-field{position:relative;display:flex;align-items:center;}
+.input-field i{position:absolute;left:14px;color:var(--text-muted);font-size:.85rem;pointer-events:none;}
+.input-field input,.input-field select{width:100%;padding:12px 14px 12px 42px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:#fff;font-size:.92rem;outline:none;font-family:var(--font-main);transition:border-color .15s;}
+.input-field select{appearance:none;-webkit-appearance:none;color-scheme:dark;}
+.input-field select:invalid{color:var(--text-muted);}
+.input-field input::placeholder{color:#5a6478;}
+.input-field input:focus,.input-field select:focus{border-color:var(--primary-light);}
+.input-field.error input,.input-field.error select{border-color:var(--accent);}
+.error-msg{display:block;color:#ff8a94;font-size:.76rem;margin-top:5px;min-height:14px;font-family:var(--font-mono);}
+
+.member-block{background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:18px;}
+.member-block:last-child{margin-bottom:0;}
+.member-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--pB);margin-bottom:16px;}
+
+.choice-row{display:flex;flex-wrap:wrap;gap:10px;}
+.choice-btn{padding:10px 16px;border-radius:8px;font-size:.88rem;font-weight:600;background:var(--bg-input);color:var(--text-main);border:1.5px solid var(--border-color);cursor:pointer;transition:.15s;font-family:var(--font-main);}
+.choice-btn.active{background:var(--success);border-color:var(--success);color:#062b1c;}
+
+.summary-box{background:rgba(0,86,179,.12);border:1px solid rgba(0,86,179,.35);border-radius:12px;padding:16px 18px;margin-bottom:20px;font-size:.9rem;}
+.summary-box div{margin-bottom:4px;}
+.summary-box b{color:#fff;}
+
+.agree-row{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+.agree-row input{margin-top:3px;width:16px;height:16px;accent-color:var(--primary);}
+.agree-row span{font-size:.9rem;color:var(--text-main);}
+
+.form-actions{display:flex;align-items:center;justify-content:space-between;margin-top:32px;padding-top:22px;border-top:1px solid var(--border-color);}
+.btn{padding:12px 26px;border-radius:8px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:9px;transition:.2s;border:none;cursor:pointer;font-size:.9rem;font-family:var(--font-main);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#d62839;}
+.btn-primary:disabled{opacity:.6;cursor:default;}
+.btn-back{background:none;color:var(--text-muted);padding:12px 16px;}
+.btn-back:hover{color:#fff;}
+.btn-back:disabled{opacity:.35;cursor:default;}
+.btn-back:disabled:hover{color:var(--text-muted);}
+
+/* Footer */
+.footer{border-top:1px solid var(--border-color);background:#070c1e;padding:36px 20px 20px;}
+.footer-container{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-brand h4{font-size:.95rem;margin-bottom:6px;}
+.footer-brand p{font-size:.82rem;color:var(--text-muted);}
+.footer-links a{color:var(--text-muted);text-decoration:none;font-size:.85rem;}
+.footer-links a:hover{color:#fff;}
+.footer-bottom{text-align:center;margin-top:20px;font-size:.78rem;color:var(--text-muted);font-family:var(--font-mono);}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(5px);z-index:2000;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-card{background:var(--bg-card);border:1px solid var(--border-color);padding:36px;border-radius:14px;max-width:440px;width:100%;text-align:center;}
+.modal-icon{width:64px;height:64px;border-radius:50%;background:rgba(16,185,129,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.8rem;color:var(--success);}
+.modal-eyebrow{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:4px;}
+.modal-verdict{font-family:var(--font-mono);font-size:1.5rem;font-weight:700;color:var(--success);margin-bottom:22px;}
+.modal-details{background:var(--bg-input);padding:16px;border-radius:10px;text-align:left;margin-bottom:8px;}
+.modal-details .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px;}
+.modal-id-row{display:flex;align-items:center;justify-content:center;gap:10px;}
+.modal-id{font-family:var(--font-mono);font-size:1.15rem;font-weight:700;}
+.copy-btn{background:rgba(0,86,179,.2);border:none;color:#60a5fa;width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-note{font-size:.86rem;color:var(--text-muted);margin-top:18px;}
+
+@media(max-width:640px){
+  .hero-title{font-size:1.9rem;}
+  .form-wrapper{padding:26px 20px;}
+  .form-grid{grid-template-columns:1fr;}
+  .input-group.full-width{grid-column:span 1;}
+  .footer-container{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="nav-container">
+    <a href="#top" class="brand-logo">
+      <div class="logo-icon"><i class="fa-solid fa-code"></i></div>
+      <div class="logo-text">
+        <span class="brand">VU · CSE</span>
+        <span class="dept">Dept. of Computer Science &amp; Engineering</span>
+      </div>
+    </a>
+    <nav class="nav-menu">
+      <a href="#register" class="nav-link btn-nav">Register Team</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero-section" id="top">
+  <div class="hero-container">
+    <div class="hero-badge"><i class="fa-solid fa-circle-dot"></i> Internal · Departmental Event</div>
+    <h1 class="hero-title">Programming Contest<br><span class="accent">Team Registration</span></h1>
+    <p class="hero-subtitle">Register your 3-member team for the departmental programming contest. Fill in every teammate's details, confirm payment, and lock in your slot.</p>
+    <div class="hero-meta">team size: 3 &nbsp;·&nbsp; time limit: open until final call</div>
+  </div>
+</section>
+
+<section class="notice">
+  <div class="notice-container">
+    <div class="notice-badge"><i class="fa-solid fa-graduation-cap"></i> Verified Entry</div>
+    <p>All three members must be currently enrolled CSE students. Registration IDs are issued instantly and required for on-site check-in.</p>
+  </div>
+</section>
+
+<section class="registration-section" id="register">
+  <div class="form-wrapper">
+    <div class="form-header">
+      <span class="tag"><i class="fa-solid fa-file-signature"></i> Official Registration</span>
+      <h2>Contest Registration Form</h2>
+      <p>Complete all four sections to receive your team's registration ID.</p>
+    </div>
+
+    <div class="stepper" id="stepper"></div>
+
+    <form id="regForm" novalidate>
+      <div id="stepContent"></div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-back" id="backBtn"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button type="button" class="btn btn-primary" id="nextBtn">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <h4>VU Programming Contest Committee</h4>
+      <p>Department of Computer Science &amp; Engineering</p>
+    </div>
+    <div class="footer-links">
+      <a href="#register"><i class="fa-solid fa-arrow-up"></i> Back to registration</a>
+    </div>
+  </div>
+  <div class="footer-bottom">&copy; 2026 VU CSE Programming Contest Committee.</div>
+</footer>
+
+<div class="modal-overlay" id="successModal">
+  <div class="modal-card">
+    <div class="modal-icon"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="modal-eyebrow">Verdict</div>
+    <div class="modal-verdict">ACCEPTED</div>
+    <div class="modal-details">
+      <div class="lbl">Registration ID</div>
+      <div class="modal-id-row">
+        <span class="modal-id" id="regIdText"></span>
+        <button class="copy-btn" id="copyBtn" type="button"><i class="fa-solid fa-copy"></i></button>
+      </div>
+    </div>
+    <p class="modal-note">Team <b id="teamNameText" style="color:#fff"></b> is registered. Save this ID — it's required for on-site check-in.</p>
+    <button type="button" class="btn btn-primary" id="downloadPdfBtn" style="width:100%;justify-content:center;margin-top:18px;">
+      <i class="fa-solid fa-file-arrow-down"></i> Download PDF Receipt
+    </button>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  {key:'A', label:'Team Info', color:'var(--pA)', tint:'var(--pA-tint)'},
+  {key:'B', label:'Members', color:'var(--pB)', tint:'var(--pB-tint)'},
+  {key:'C', label:'Contact & Payment', color:'var(--pC)', tint:'var(--pC-tint)'},
+  {key:'D', label:'Declaration', color:'var(--pD)', tint:'var(--pD-tint)'},
+];
+const SEMESTERS = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
+const SIZES = ["S","M","L","XL","XXL"];
+
+const state = {
+  step: 0,
+  teamName: '',
+  members: [emptyMember(), emptyMember(), emptyMember()],
+  contact: '',
+  payStatus: '',
+  payMethod: '',
+  txnId: '',
+  agree: false,
+  errors: {},
+};
+let regCounter = 0;
+let lastReceipt = null;
+
+function emptyMember(){ return {name:'',id:'',semester:'',mobile:'',email:'',size:''}; }
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const mobileRe = /^01[0-9]{9}$/;
+
+function validate(stepIdx){
+  const e = {};
+  if(stepIdx===0){
+    if(!state.teamName.trim()) e.teamName = 'Team name required.';
+  }
+  if(stepIdx===1){
+    state.members.forEach((m,i)=>{
+      if(!m.name.trim()) e[`m${i}name`]='Required.';
+      if(!m.id.trim()) e[`m${i}id`]='Required.';
+      if(!m.semester) e[`m${i}sem`]='Required.';
+      if(!mobileRe.test(m.mobile.trim())) e[`m${i}mobile`]='Valid 11-digit BD number needed.';
+      if(!emailRe.test(m.email.trim())) e[`m${i}email`]='Valid email needed.';
+      if(!m.size) e[`m${i}size`]='Required.';
+    });
+  }
+  if(stepIdx===2){
+    if(!state.contact) e.contact='Pick a contact person.';
+    if(!state.payStatus) e.payStatus='Required.';
+    if(!state.payMethod) e.payMethod='Required.';
+    if(state.payMethod!=='Cash' && !state.txnId.trim()) e.txnId='Transaction ID required.';
+  }
+  if(stepIdx===3){
+    if(!state.agree) e.agree='Must confirm before submitting.';
+  }
+  state.errors = e;
+  return Object.keys(e).length===0;
+}
+
+function doneSteps(){
+  return [
+    state.teamName.trim().length>0,
+    state.members.every(m=>m.name && m.id && m.semester && mobileRe.test(m.mobile) && emailRe.test(m.email) && m.size),
+    !!state.contact && !!state.payStatus && !!state.payMethod && (state.payMethod==='Cash' || state.txnId.trim()),
+    state.agree
+  ];
+}
+
+function renderStepper(){
+  const done = doneSteps();
+  const el = document.getElementById('stepper');
+  el.innerHTML = STEPS.map((s,i)=>{
+    const isCurrent = i===state.step;
+    const isDone = done[i];
+    const dotStyle = (isCurrent||isDone) ? `background:${s.color};border-color:${s.color};color:#0b132b;` : '';
+    const labelStyle = isCurrent ? `color:${s.color};` : '';
+    const inner = (isDone && !isCurrent) ? '<i class="fa-solid fa-check"></i>' : s.key;
+    let html = `<button type="button" class="step-btn" data-idx="${i}">
+      <div class="step-dot ${isCurrent?'active':''}" style="${dotStyle}">${inner}</div>
+      <div class="step-label" style="${labelStyle}">${s.label}</div>
+    </button>`;
+    if(i < STEPS.length-1){
+      html += `<div class="step-line" style="background:${done[i]?s.color:'var(--border-color)'}"></div>`;
+    }
+    return html;
+  }).join('');
+  el.querySelectorAll('.step-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = parseInt(btn.dataset.idx,10);
+      if(done[idx] || idx <= state.step){ state.step = idx; render(); }
+    });
+  });
+}
+
+function field(label, id, errMsg, inputHtml){
+  return `<div class="input-group" id="grp-${id}">
+    <label>${label}</label>
+    ${inputHtml}
+    <span class="error-msg">${errMsg||''}</span>
+  </div>`;
+}
+
+function renderStepContent(){
+  const s = STEPS[state.step];
+  const content = document.getElementById('stepContent');
+  let html = `<div class="step-title-row">
+    <div class="step-card-icon" style="background:${s.tint};color:${s.color}">${s.key}</div>
+    <h3>${s.label}</h3>
+  </div>`;
+
+  if(state.step===0){
+    html += `<div class="form-grid">
+      ${field('Team Name <span class="required">*</span>', 'teamName', state.errors.teamName,
+        `<div class="input-field ${state.errors.teamName?'error':''}">
+          <i class="fa-solid fa-users"></i>
+          <input type="text" id="teamName" placeholder="e.g. Segfault Squad" value="${escapeHtml(state.teamName)}">
+        </div>`)}
+    </div>`;
+  }
+
+  if(state.step===1){
+    html += state.members.map((m,i)=>`
+      <div class="member-block">
+        <div class="member-tag"><i class="fa-solid fa-user"></i> Member ${i+1}</div>
+        <div class="form-grid">
+          ${field('Full Name <span class="required">*</span>', `m${i}name`, state.errors[`m${i}name`],
+            `<div class="input-field ${state.errors[`m${i}name`]?'error':''}"><i class="fa-solid fa-user"></i>
+              <input type="text" data-m="${i}" data-k="name" placeholder="Full name" value="${escapeHtml(m.name)}"></div>`)}
+          ${field('Student ID <span class="required">*</span>', `m${i}id`, state.errors[`m${i}id`],
+            `<div class="input-field ${state.errors[`m${i}id`]?'error':''}"><i class="fa-solid fa-id-badge"></i>
+              <input type="text" data-m="${i}" data-k="id" placeholder="e.g. 2103xxx" value="${escapeHtml(m.id)}"></div>`)}
+          ${field('Semester <span class="required">*</span>', `m${i}sem`, state.errors[`m${i}sem`],
+            `<div class="input-field ${state.errors[`m${i}sem`]?'error':''}"><i class="fa-solid fa-graduation-cap"></i>
+              <select data-m="${i}" data-k="semester">
+                <option value="" ${!m.semester?'selected':''} disabled>Select semester</option>
+                ${SEMESTERS.map(o=>`<option value="${o}" ${m.semester===o?'selected':''}>${o}</option>`).join('')}
+              </select></div>`)}
+          ${field('Mobile Number <span class="required">*</span>', `m${i}mobile`, state.errors[`m${i}mobile`],
+            `<div class="input-field ${state.errors[`m${i}mobile`]?'error':''}"><i class="fa-solid fa-phone"></i>
+              <input type="tel" data-m="${i}" data-k="mobile" placeholder="01XXXXXXXXX" value="${escapeHtml(m.mobile)}"></div>`)}
+          ${field('Email <span class="required">*</span>', `m${i}email`, state.errors[`m${i}email`],
+            `<div class="input-field ${state.errors[`m${i}email`]?'error':''}"><i class="fa-solid fa-envelope"></i>
+              <input type="email" data-m="${i}" data-k="email" placeholder="name@example.com" value="${escapeHtml(m.email)}"></div>`)}
+          ${field('T-Shirt Size <span class="required">*</span>', `m${i}size`, state.errors[`m${i}size`],
+            `<div class="input-field ${state.errors[`m${i}size`]?'error':''}"><i class="fa-solid fa-shirt"></i>
+              <select data-m="${i}" data-k="size">
+                <option value="" ${!m.size?'selected':''} disabled>Select size</option>
+                ${SIZES.map(o=>`<option value="${o}" ${m.size===o?'selected':''}>${o}</option>`).join('')}
+              </select></div>`)}
+        </div>
+      </div>`).join('');
+  }
+
+  if(state.step===2){
+    html += `<div class="input-group">
+        <label>Contact Person <span class="required">*</span></label>
+        <div class="choice-row">
+          ${[0,1,2].map(i=>{
+            const label = state.members[i].name.trim() || `Member ${i+1}`;
+            const val = `Member ${i+1}`;
+            const active = state.contact===val;
+            return `<button type="button" class="choice-btn ${active?'active':''}" data-contact="${val}">${escapeHtml(label)}</button>`;
+          }).join('')}
+        </div>
+        <span class="error-msg">${state.errors.contact||''}</span>
+      </div>
+      <div class="input-group">
+        <label>Payment Status <span class="required">*</span></label>
+        <div class="choice-row">
+          ${['Paid','Unpaid'].map(v=>`<button type="button" class="choice-btn ${state.payStatus===v?'active':''}" data-paystatus="${v}">${v}</button>`).join('')}
+        </div>
+        <span class="error-msg">${state.errors.payStatus||''}</span>
+      </div>
+      <div class="input-group">
+        <label>Payment Method <span class="required">*</span></label>
+        <div class="choice-row">
+          ${['Cash','bKash','Nagad'].map(v=>`<button type="button" class="choice-btn ${state.payMethod===v?'active':''}" data-paymethod="${v}">${v}</button>`).join('')}
+        </div>
+        <span class="error-msg">${state.errors.payMethod||''}</span>
+      </div>`;
+    if(state.payMethod==='bKash' || state.payMethod==='Nagad'){
+      html += field(`${state.payMethod} Transaction ID <span class="required">*</span>`, 'txnId', state.errors.txnId,
+        `<div class="input-field ${state.errors.txnId?'error':''}"><i class="fa-solid fa-hashtag"></i>
+          <input type="text" id="txnId" placeholder="e.g. 8N7K2P9QRS" value="${escapeHtml(state.txnId)}"></div>`);
+    }
+  }
+
+  if(state.step===3){
+    html += `<div class="summary-box">
+        <div><b>Team:</b> ${escapeHtml(state.teamName)||'—'}</div>
+        <div><b>Contact:</b> ${escapeHtml(state.contact)||'—'}</div>
+        <div><b>Payment:</b> ${escapeHtml(state.payStatus)||'—'} via ${escapeHtml(state.payMethod)||'—'}</div>
+      </div>
+      <label class="agree-row">
+        <input type="checkbox" id="agree" ${state.agree?'checked':''}>
+        <span>We confirm that all the information provided is correct.</span>
+      </label>
+      <span class="error-msg">${state.errors.agree||''}</span>`;
+  }
+
+  content.innerHTML = html;
+  attachFieldListeners();
+}
+
+function attachFieldListeners(){
+  const teamName = document.getElementById('teamName');
+  if(teamName) teamName.addEventListener('input', e=>{ state.teamName = e.target.value; });
+
+  document.querySelectorAll('[data-m]').forEach(el=>{
+    el.addEventListener('input', e=>{
+      const i = parseInt(el.dataset.m,10), k = el.dataset.k;
+      state.members[i][k] = e.target.value;
+    });
+    el.addEventListener('change', e=>{
+      const i = parseInt(el.dataset.m,10), k = el.dataset.k;
+      state.members[i][k] = e.target.value;
+    });
+  });
+
+  document.querySelectorAll('[data-contact]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ state.contact = btn.dataset.contact; renderStepContent(); });
+  });
+  document.querySelectorAll('[data-paystatus]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ state.payStatus = btn.dataset.paystatus; renderStepContent(); });
+  });
+  document.querySelectorAll('[data-paymethod]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.payMethod = btn.dataset.paymethod;
+      if(state.payMethod==='Cash') state.txnId='';
+      renderStepContent();
+    });
+  });
+  const txnId = document.getElementById('txnId');
+  if(txnId) txnId.addEventListener('input', e=>{ state.txnId = e.target.value; });
+
+  const agree = document.getElementById('agree');
+  if(agree) agree.addEventListener('change', e=>{ state.agree = e.target.checked; });
+}
+
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render(){
+  renderStepper();
+  renderStepContent();
+  const backBtn = document.getElementById('backBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  backBtn.disabled = state.step===0;
+  if(state.step<3){
+    nextBtn.innerHTML = 'Next <i class="fa-solid fa-arrow-right"></i>';
+    nextBtn.style.background = 'var(--accent)';
+  } else {
+    nextBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Registration';
+    nextBtn.style.background = 'var(--primary)';
+  }
+}
+
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  if(state.step>0){ state.step--; render(); }
+});
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if(!validate(state.step)){ render(); return; }
+  if(state.step<3){
+    state.step++;
+    render();
+  } else {
+    submitForm();
+  }
+});
+
+function submitForm(){
+  const btn = document.getElementById('nextBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Compiling…';
+  setTimeout(()=>{
+    regCounter += 1;
+    const id = `VUPC_CH26-${String(regCounter).padStart(3,'0')}`;
+    document.getElementById('regIdText').textContent = id;
+    document.getElementById('teamNameText').textContent = state.teamName;
+    lastReceipt = {
+      id,
+      teamName: state.teamName,
+      members: state.members.map(m=>({...m})),
+      contact: state.contact,
+      payStatus: state.payStatus,
+      payMethod: state.payMethod,
+      txnId: state.txnId,
+      timestamp: new Date()
+    };
+    document.getElementById('successModal').classList.add('show');
+    btn.disabled = false;
+    render();
+  }, 1000);
+}
+
+function downloadReceiptPdf(){
+  if(!lastReceipt) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginX = 48;
+  let y = 56;
+
+  // Header
+  doc.setFillColor(11,19,43);
+  doc.rect(0,0,pageWidth,90,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(16);
+  doc.text('Varendra University Programming Club', marginX, 38);
+  doc.setFontSize(12);
+  doc.setTextColor(230,57,70);
+  doc.text('Code Harbor 2026 — Registration Receipt', marginX, 60);
+  y = 120;
+
+  doc.setTextColor(20,20,20);
+
+  // Verdict + Reg ID box
+  doc.setDrawColor(0,86,179);
+  doc.setLineWidth(1);
+  doc.roundedRect(marginX, y, pageWidth - marginX*2, 60, 6, 6);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(120,120,120);
+  doc.text('REGISTRATION ID', marginX+16, y+22);
+  doc.setFontSize(16);
+  doc.setTextColor(0,86,179);
+  doc.text(lastReceipt.id, marginX+16, y+44);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(80,80,80);
+  doc.text(`Submitted: ${lastReceipt.timestamp.toLocaleString()}`, pageWidth - marginX - 16, y+22, {align:'right'});
+  doc.setTextColor(16,150,90);
+  doc.setFont('helvetica','bold');
+  doc.text('STATUS: ACCEPTED', pageWidth - marginX - 16, y+44, {align:'right'});
+  y += 90;
+
+  // Team name
+  doc.setTextColor(20,20,20);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text('Team Name', marginX, y);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(12);
+  doc.text(lastReceipt.teamName || '-', marginX + 100, y);
+  y += 28;
+
+  // Members table header
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('Team Members', marginX, y);
+  y += 10;
+  doc.setDrawColor(220,220,220);
+  doc.line(marginX, y, pageWidth-marginX, y);
+  y += 18;
+
+  const colX = { no: marginX, name: marginX+30, id: marginX+180, sem: marginX+270, size: marginX+320 };
+  doc.setFontSize(9);
+  doc.setTextColor(120,120,120);
+  doc.text('#', colX.no, y);
+  doc.text('Name', colX.name, y);
+  doc.text('Student ID', colX.id, y);
+  doc.text('Sem', colX.sem, y);
+  doc.text('Size', colX.size, y);
+  y += 6;
+  doc.line(marginX, y, pageWidth-marginX, y);
+  y += 16;
+
+  doc.setFontSize(10);
+  doc.setTextColor(20,20,20);
+  doc.setFont('helvetica','normal');
+  lastReceipt.members.forEach((m,i)=>{
+    doc.text(String(i+1), colX.no, y);
+    doc.text(m.name || '-', colX.name, y);
+    doc.text(m.id || '-', colX.id, y);
+    doc.text(m.semester || '-', colX.sem, y);
+    doc.text(m.size || '-', colX.size, y);
+    y += 16;
+    doc.setFontSize(8.5);
+    doc.setTextColor(110,110,110);
+    doc.text(`${m.email || '-'}   |   ${m.mobile || '-'}`, colX.name, y);
+    doc.setFontSize(10);
+    doc.setTextColor(20,20,20);
+    y += 18;
+  });
+
+  y += 8;
+  doc.setDrawColor(220,220,220);
+  doc.line(marginX, y, pageWidth-marginX, y);
+  y += 26;
+
+  // Contact & payment
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('Contact & Payment', marginX, y);
+  y += 20;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10.5);
+  const rows = [
+    ['Contact Person', lastReceipt.contact || '-'],
+    ['Payment Status', lastReceipt.payStatus || '-'],
+    ['Payment Method', lastReceipt.payMethod || '-'],
+  ];
+  if(lastReceipt.payMethod === 'bKash' || lastReceipt.payMethod === 'Nagad'){
+    rows.push([`${lastReceipt.payMethod} Transaction ID`, lastReceipt.txnId || '-']);
+  }
+  rows.forEach(([label,val])=>{
+    doc.setTextColor(120,120,120);
+    doc.text(label, marginX, y);
+    doc.setTextColor(20,20,20);
+    doc.text(String(val), marginX + 160, y);
+    y += 18;
+  });
+
+  y += 20;
+  doc.setDrawColor(230,230,230);
+  doc.line(marginX, y, pageWidth-marginX, y);
+  y += 20;
+  doc.setFontSize(9);
+  doc.setTextColor(140,140,140);
+  doc.text('Please bring this receipt (printed or digital) for on-site check-in.', marginX, y);
+  y += 14;
+  doc.text('VU Programming Contest Committee · Dept. of Computer Science & Engineering', marginX, y);
+
+  doc.save(`${lastReceipt.id}_receipt.pdf`);
+}
+
+document.getElementById('downloadPdfBtn').addEventListener('click', downloadReceiptPdf);
+
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const id = document.getElementById('regIdText').textContent;
+  navigator.clipboard?.writeText(id);
+  const btn = document.getElementById('copyBtn');
+  btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+  setTimeout(()=>{ btn.innerHTML = '<i class="fa-solid fa-copy"></i>'; }, 1200);
+});
+
+render();
+</script>
+</body>
+</html>

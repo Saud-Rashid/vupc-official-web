@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Harbor 2026 | VUPC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --bg:#0a0714;
+    --bg-soft:#0e0a1c;
+    --surface:rgba(255,255,255,0.035);
+    --surface-hover:rgba(255,255,255,0.06);
+    --border:rgba(255,255,255,0.09);
+    --border-bright:rgba(255,255,255,0.18);
+    --text:#f5f3fa;
+    --text-dim:#9b93ae;
+    --text-faint:#6b6480;
+    --magenta:#e04fe0;
+    --violet:#7c5cf5;
+    --cyan:#22d3ee;
+    --amber:#fbbf24;
+    --green:#34d399;
+    --red:#fb7185;
+    --ink:#0d0e15;
+    --grad-primary: linear-gradient(135deg,var(--magenta),var(--violet));
+    --radius:20px;
+    --radius-sm:12px;
+    --radius-pill:999px;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --nav-h:76px;
+    --strip-h:78px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{display:block;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  button{font:inherit;cursor:pointer;background:none;border:none;color:inherit;}
+  input,select{font:inherit;color:inherit;}
+
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--cyan);
+    outline-offset:3px;
+    border-radius:6px;
+  }
+
+  ::selection{background:var(--violet);color:#fff;}
+
+  /* ============ BACKGROUND LAYER ============ */
+  .bg-layer{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .bg-grid{
+    position:absolute;
+    inset:0;
+    background-image:radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size:30px 30px;
+    opacity:.5;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 20%, #000 40%, transparent 90%);
+  }
+  .blob{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(90px);
+    mix-blend-mode:screen;
+    opacity:.55;
+    will-change:transform;
+  }
+  .blob-1{
+    width:520px;height:520px;
+    background:var(--magenta);
+    top:-140px;left:-120px;
+    animation:drift1 30s ease-in-out infinite alternate;
+  }
+  .blob-2{
+    width:480px;height:480px;
+    background:var(--violet);
+    bottom:-180px;right:-100px;
+    animation:drift2 36s ease-in-out infinite alternate;
+  }
+  .blob-3{
+    width:360px;height:360px;
+    background:var(--cyan);
+    top:38%;right:8%;
+    opacity:.35;
+    animation:drift3 24s ease-in-out infinite alternate;
+  }
+  .blob-4{
+    width:300px;height:300px;
+    background:var(--amber);
+    bottom:12%;left:6%;
+    opacity:.22;
+    animation:drift2 40s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes drift1{
+    0%{transform:translate(0,0) scale(1);}
+    100%{transform:translate(90px,70px) scale(1.15);}
+  }
+  @keyframes drift2{
+    0%{transform:translate(0,0) scale(1);}
+    100%{transform:translate(-80px,-60px) scale(1.1);}
+  }
+  @keyframes drift3{
+    0%{transform:translate(0,0);}
+    100%{transform:translate(-50px,60px);}
+  }
+
+  /* ============ LAYOUT HELPERS ============ */
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 32px;
+  }
+  .section{
+    position:relative;
+    z-index:1;
+    padding:7rem 0;
+    scroll-margin-top:calc(var(--nav-h) + var(--strip-h) + 12px);
+  }
+  .section-head{
+    max-width:640px;
+    margin-bottom:3rem;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:.8rem;
+    color:var(--cyan);
+    letter-spacing:.03em;
+    display:flex;
+    align-items:center;
+    gap:.55rem;
+    margin-bottom:1rem;
+    text-transform:uppercase;
+  }
+  .eyebrow::before{
+    content:"";
+    display:inline-block;
+    width:20px;
+    height:2px;
+    border-radius:2px;
+    background:var(--cyan);
+    box-shadow:0 0 8px var(--cyan);
+  }
+  .section-title{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(2rem,4vw,2.9rem);
+    letter-spacing:-0.01em;
+    margin-bottom:.9rem;
+  }
+  .section-sub{
+    color:var(--text-dim);
+    font-size:1.05rem;
+    max-width:560px;
+  }
+  .grad-text{
+    background:var(--grad-primary);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  /* reveal on scroll */
+  [data-reveal]{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  [data-reveal].in-view{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  /* ============ NAV ============ */
+  .nav{
+    position:fixed;
+    top:0;left:0;right:0;
+    z-index:50;
+    height:var(--nav-h);
+    display:flex;
+    align-items:center;
+    background:rgba(10,7,20,0.55);
+    backdrop-filter:blur(16px) saturate(140%);
+    -webkit-backdrop-filter:blur(16px) saturate(140%);
+    border-bottom:1px solid var(--border);
+  }
+  .nav .wrap{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.15rem;
+  }
+  .brand .dots{display:flex;gap:5px;}
+  .brand .dots span{width:9px;height:9px;border-radius:50%;display:block;}
+  .brand .dots span:nth-child(1){background:var(--red);}
+  .brand .dots span:nth-child(2){background:var(--amber);}
+  .brand .dots span:nth-child(3){background:var(--green);}
+  .brand small{
+    display:block;
+    font-family:var(--font-mono);
+    font-weight:400;
+    font-size:.7rem;
+    color:var(--text-faint);
+    margin-top:1px;
+  }
+
+  .nav-tabs{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:5px;
+  }
+  .nav-tab{
+    font-family:var(--font-mono);
+    font-size:.8rem;
+    color:var(--text-dim);
+    padding:.5rem .75rem;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+    transition:background .2s ease, color .2s ease;
+    white-space:nowrap;
+  }
+  .nav-tab .tdot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--text-faint);
+    transition:background .2s ease;
+  }
+  .nav-tab:hover{color:var(--text);background:var(--surface-hover);}
+  .nav-tab.active{color:var(--text);background:rgba(255,255,255,0.07);}
+  .nav-tab.active .tdot{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+
+  .nav-cta{
+    font-family:var(--font-mono);
+    font-size:.82rem;
+    font-weight:700;
+    padding:.7rem 1.2rem;
+    border-radius:var(--radius-pill);
+    background:var(--grad-primary);
+    color:var(--ink);
+    box-shadow:0 6px 20px rgba(224,79,224,0.35);
+    transition:transform .2s ease, box-shadow .2s ease;
+    white-space:nowrap;
+  }
+  .nav-cta:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(224,79,224,0.45);}
+
+  .burger{
+    display:none;
+    width:38px;height:38px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    align-items:center;
+    justify-content:center;
+    background:var(--surface);
+  }
+  .burger span{
+    width:16px;height:2px;background:var(--text);
+    position:relative;
+    display:block;
+  }
+  .burger span::before,.burger span::after{
+    content:"";
+    position:absolute;left:0;
+    width:16px;height:2px;background:var(--text);
+    transition:transform .2s ease;
+  }
+  .burger span::before{top:-5px;}
+  .burger span::after{top:5px;}
+  .burger.open span{background:transparent;}
+  .burger.open span::before{top:0;transform:rotate(45deg);}
+  .burger.open span::after{top:0;transform:rotate(-45deg);}
+
+  .mobile-panel{
+    position:fixed;
+    inset:calc(var(--nav-h) + var(--strip-h)) 0 0 0;
+    background:rgba(10,7,20,0.97);
+    backdrop-filter:blur(10px);
+    z-index:49;
+    display:none;
+    flex-direction:column;
+    padding:2rem 32px;
+    gap:.5rem;
+  }
+  .mobile-panel.open{display:flex;}
+  .mobile-panel a{
+    font-family:var(--font-mono);
+    font-size:1.1rem;
+    padding:1rem 0;
+    border-bottom:1px solid var(--border);
+    color:var(--text-dim);
+  }
+  .mobile-panel a.active{color:var(--cyan);}
+  .mobile-panel .mp-cta{
+    margin-top:1.4rem;
+    text-align:center;
+    border:none;
+  }
+
+  /* ============ BRAND STRIP (triple logo) ============ */
+  .brand-strip{
+    position:fixed;
+    top:var(--nav-h);
+    left:0;right:0;
+    z-index:45;
+    height:var(--strip-h);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:1.4rem;
+    background:rgba(10,7,20,0.4);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand-strip img{
+    height:52px;
+    width:auto;
+    object-fit:contain;
+    filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+  }
+  .brand-strip .bs-sep{
+    width:1px;height:32px;
+    background:var(--border-bright);
+  }
+  .brand-strip span.bs-label{
+    font-family:var(--font-mono);
+    font-size:.68rem;
+    color:var(--text-faint);
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-right:.2rem;
+  }
+  @media (max-width:640px){
+    .brand-strip{gap:.8rem;padding:0 12px;}
+    .brand-strip img{height:36px;}
+    .brand-strip span.bs-label{display:none;}
+  }
+
+  /* ============ BUTTONS ============ */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:.55rem;
+    padding:.9rem 1.6rem;
+    border-radius:var(--radius-pill);
+    font-weight:700;
+    font-size:.95rem;
+    transition:transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+  }
+  .btn-primary{
+    background:var(--grad-primary);
+    color:var(--ink);
+    box-shadow:0 8px 24px rgba(224,79,224,0.3);
+  }
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(224,79,224,0.4);}
+  .btn-outline{
+    border:1px solid var(--border-bright);
+    color:var(--text);
+    background:var(--surface);
+    font-weight:600;
+  }
+  .btn-outline:hover{background:var(--surface-hover);border-color:var(--cyan);}
+  .btn-block{width:100%;justify-content:center;}
+
+  /* ============ HERO ============ */
+  .hero{
+    padding-top:calc(var(--nav-h) + var(--strip-h) + 4rem);
+    padding-bottom:5rem;
+    position:relative;
+    z-index:1;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:3.5rem;
+    align-items:center;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    font-family:var(--font-mono);
+    font-size:.78rem;
+    color:var(--magenta);
+    background:rgba(224,79,224,0.1);
+    border:1px solid rgba(224,79,224,0.3);
+    padding:.45rem .9rem;
+    border-radius:var(--radius-pill);
+    margin-bottom:1.6rem;
+  }
+  .badge .pulse{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--magenta);
+    box-shadow:0 0 8px var(--magenta);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:.35;}
+  }
+  .hero h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(2.75rem,6.2vw,4.6rem);
+    line-height:1.03;
+    letter-spacing:-0.02em;
+    margin-bottom:1.1rem;
+    text-shadow:0 2px 4px rgba(0,0,0,0.8);
+  }
+  .hero .theme-line{
+    font-family:var(--font-mono);
+    color:var(--amber);
+    font-size:clamp(1rem,2vw,1.25rem);
+    font-weight:600;
+    margin-bottom:1.4rem;
+    letter-spacing:.02em;
+    text-shadow:0 2px 4px rgba(0,0,0,0.8);
+  }
+  .hero p.desc{
+    color:var(--text-dim);
+    font-size:1.05rem;
+    max-width:520px;
+    margin-bottom:2.2rem;
+  }
+  .stats-row{
+    display:flex;
+    gap:2.2rem;
+    margin-bottom:2.4rem;
+    flex-wrap:wrap;
+  }
+  .stat b{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:1.7rem;
+    font-weight:700;
+    background:var(--grad-primary);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .stat span{
+    font-size:.82rem;
+    color:var(--text-faint);
+  }
+  .cta-row{display:flex;gap:1rem;flex-wrap:wrap;}
+
+  /* terminal card */
+  .terminal{
+    background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    backdrop-filter:blur(18px);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .terminal-head{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:.9rem 1.1rem;
+    border-bottom:1px solid var(--border);
+    background:rgba(255,255,255,0.02);
+  }
+  .terminal-head span{width:11px;height:11px;border-radius:50%;}
+  .terminal-head span:nth-child(1){background:var(--red);}
+  .terminal-head span:nth-child(2){background:var(--amber);}
+  .terminal-head span:nth-child(3){background:var(--green);}
+  .terminal-head em{
+    font-style:normal;
+    font-family:var(--font-mono);
+    font-size:.75rem;
+    color:var(--text-faint);
+    margin-left:.6rem;
+  }
+  .terminal-body{
+    padding:1.6rem 1.5rem 2rem;
+    font-family:var(--font-mono);
+    font-size:.92rem;
+    line-height:1.85;
+    min-height:230px;
+  }
+  .terminal-body .kw{color:var(--magenta);}
+  .terminal-body .fn{color:var(--violet);}
+  .terminal-body .str{color:var(--amber);}
+  .terminal-body .cm{color:var(--text-faint);}
+  .terminal-body .typed{color:var(--text);}
+  .cursor-blink{
+    display:inline-block;
+    width:8px;height:1.1em;
+    background:var(--cyan);
+    vertical-align:text-bottom;
+    animation:blink 1s step-start infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+
+  /* ============ CARDS (glass panels w/ traffic lights) ============ */
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    backdrop-filter:blur(18px);
+    padding:0;
+    overflow:hidden;
+    transition:border-color .25s ease, transform .25s ease;
+  }
+  .panel:hover{border-color:var(--border-bright);}
+  .panel-head{
+    display:flex;align-items:center;gap:8px;
+    padding:.85rem 1.3rem;
+    border-bottom:1px solid var(--border);
+    background:rgba(255,255,255,0.02);
+  }
+  .panel-head span{width:10px;height:10px;border-radius:50%;}
+  .panel-head span:nth-child(1){background:var(--red);}
+  .panel-head span:nth-child(2){background:var(--amber);}
+  .panel-head span:nth-child(3){background:var(--green);}
+  .panel-head em{
+    font-style:normal;font-family:var(--font-mono);
+    font-size:.72rem;color:var(--text-faint);margin-left:.5rem;
+  }
+  .panel-body{padding:1.8rem 1.6rem 2rem;}
+  .panel h3{
+    font-family:var(--font-display);
+    font-size:1.3rem;
+    font-weight:600;
+    display:flex;align-items:center;gap:.6rem;
+    margin-bottom:1.2rem;
+  }
+
+  .check-list li{
+    display:flex;
+    gap:.7rem;
+    align-items:flex-start;
+    font-size:.95rem;
+    color:var(--text-dim);
+    padding:.6rem 0;
+    border-top:1px dashed var(--border);
+  }
+  .check-list li:first-child{border-top:none;padding-top:0;}
+  .check-list svg{flex:none;margin-top:2px;color:var(--cyan);}
+
+  /* single-column track layout (Track 2 removed) */
+  .grid-2{display:grid;grid-template-columns:1fr;gap:1.6rem;max-width:640px;}
+  .grid-2.grid-2--dual{grid-template-columns:1fr 1fr;max-width:100%;}
+
+  /* info rows for mock test / main contest */
+  .info-row{
+    display:flex;
+    align-items:center;
+    gap:.9rem;
+    padding:1rem 0;
+    border-top:1px dashed var(--border);
+  }
+  .info-row:first-child{border-top:none;padding-top:0;}
+  .info-row .icon{
+    width:38px;height:38px;
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(124,92,245,0.15);
+    color:var(--violet);
+    flex:none;
+  }
+  .info-row b{display:block;font-size:.75rem;color:var(--text-faint);font-family:var(--font-mono);font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+  .info-row p{font-size:1rem;font-weight:600;color:var(--text);margin-top:2px;}
+
+  /* day-by-day event schedule */
+  .day-block{padding:1.2rem 0;border-top:1px dashed var(--border);}
+  .day-block:first-child{border-top:none;padding-top:0;}
+  .day-block .day-date{
+    display:inline-block;font-family:var(--font-mono);font-size:.72rem;color:var(--cyan);
+    text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem;
+    background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);
+    padding:.3rem .7rem;border-radius:var(--radius-pill);
+  }
+  .day-block h4{font-family:var(--font-display);font-size:1.05rem;font-weight:600;margin-bottom:.7rem;}
+  .slot-venue{
+    font-family:var(--font-mono);font-size:.7rem;color:var(--text-faint);
+    text-transform:uppercase;letter-spacing:.04em;margin:.7rem 0 .3rem;
+  }
+  .slot-venue:first-of-type{margin-top:0;}
+  .slot{display:flex;justify-content:space-between;gap:1rem;font-size:.88rem;color:var(--text-dim);padding:.3rem 0;}
+  .slot b{color:var(--text);font-weight:600;white-space:nowrap;}
+  .fee-strip{
+    display:flex;flex-wrap:wrap;gap:1.4rem;align-items:center;
+    padding:1.1rem 1.3rem;margin-top:.4rem;
+    background:rgba(224,79,224,0.06);border:1px solid rgba(224,79,224,0.25);
+    border-radius:var(--radius-sm);
+  }
+  .fee-strip .fee-amt{font-family:var(--font-mono);font-weight:700;color:var(--magenta);font-size:1.1rem;}
+  .fee-strip .fee-note{font-size:.85rem;color:var(--text-dim);}
+
+  /* ============ FORM ============ */
+  .form-panel{max-width:820px;}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;}
+  .field-grid.three{grid-template-columns:1fr 1fr 1fr;}
+  .field label{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:.75rem;
+    letter-spacing:.04em;
+    color:var(--text-faint);
+    margin-bottom:.5rem;
+    text-transform:uppercase;
+  }
+  .field label .req{color:var(--magenta);}
+  .field input, .field select{
+    width:100%;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:.85rem 1rem;
+    color:var(--text);
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .field input::placeholder{color:var(--text-faint);}
+  .field input:focus, .field select:focus{
+    border-color:var(--cyan);
+    background:rgba(255,255,255,0.05);
+  }
+  .field select{appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239b93ae' stroke-width='2'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    background-repeat:no-repeat;
+    background-position:right 1rem center;
+  }
+  .form-hint{
+    font-size:.85rem;
+    color:var(--text-faint);
+    margin-bottom:1.8rem;
+  }
+  .trx-fields{
+    display:none;
+    grid-template-columns:1fr 1fr;
+    gap:1.2rem;
+    margin-bottom:1.2rem;
+    padding:1.1rem;
+    border:1px dashed rgba(224,79,224,0.35);
+    border-radius:var(--radius-sm);
+    background:rgba(224,79,224,0.05);
+  }
+  .trx-fields.show{display:grid;}
+  .trx-note{
+    grid-column:1/-1;
+    font-family:var(--font-mono);
+    font-size:.75rem;
+    color:var(--magenta);
+    margin-bottom:.2rem;
+  }
+  .success-box{
+    display:none;
+    text-align:center;
+    padding:2.6rem 1rem;
+  }
+  .success-box.show{display:block;}
+  .success-box .tick{
+    width:56px;height:56px;
+    border-radius:50%;
+    background:rgba(52,211,153,0.12);
+    border:1px solid rgba(52,211,153,0.4);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 1.1rem;
+    color:var(--green);
+  }
+  .success-box h4{font-family:var(--font-display);font-size:1.3rem;margin-bottom:.5rem;}
+  .success-box p{color:var(--text-dim);font-size:.95rem;}
+
+  /* ============ BLOG ============ */
+  .blog-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1.6rem;
+  }
+  .blog-card{display:flex;flex-direction:column;}
+  .blog-card .blog-thumb{
+    height:170px;
+    position:relative;
+    background:linear-gradient(135deg, rgba(224,79,224,0.25), rgba(124,92,245,0.25));
+    overflow:hidden;
+  }
+  .blog-card .blog-thumb img{
+    width:100%;height:100%;
+    object-fit:cover;
+    object-position:center;
+    display:block;
+  }
+  .blog-card .blog-thumb::after{
+    content:"";
+    position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(10,7,20,0) 40%, rgba(10,7,20,0.55) 100%);
+    pointer-events:none;
+  }
+  .blog-card .panel-body{padding:1.5rem 1.4rem 1.7rem;display:flex;flex-direction:column;flex:1;}
+  .blog-card h4{
+    font-family:var(--font-display);
+    font-size:1.08rem;
+    font-weight:600;
+    margin-bottom:.6rem;
+  }
+  .blog-card .blog-meta{
+    font-family:var(--font-mono);
+    font-size:.7rem;
+    color:var(--text-faint);
+    margin-bottom:.8rem;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .blog-card p.blog-excerpt{
+    color:var(--text-dim);
+    font-size:.9rem;
+    margin-bottom:1rem;
+  }
+  .blog-more{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .4s ease;
+  }
+  .blog-more p{
+    color:var(--text-dim);
+    font-size:.9rem;
+    padding-bottom:1rem;
+  }
+  .blog-card.expanded .blog-more{max-height:480px;}
+  .blog-link{
+    display:inline-flex;align-items:center;gap:.4rem;
+    color:var(--cyan);font-family:var(--font-mono);font-size:.82rem;
+    margin-top:.4rem;font-weight:600;
+  }
+  .blog-link:hover{text-decoration:underline;}
+  .read-more-btn{
+    margin-top:auto;
+    align-self:flex-start;
+    font-family:var(--font-mono);
+    font-size:.8rem;
+    font-weight:600;
+    color:var(--cyan);
+    display:inline-flex;
+    align-items:center;
+    gap:.35rem;
+  }
+  .read-more-btn svg{transition:transform .3s ease;}
+  .blog-card.expanded .read-more-btn svg{transform:rotate(180deg);}
+
+  /* ============ ABOUT ============ */
+  .about-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.6rem;
+  }
+  .about-grid .panel-body p{color:var(--text-dim);font-size:.95rem;}
+  .about-grid .panel-body p + p{margin-top:.9rem;}
+
+  /* ============ FOOTER ============ */
+  footer{
+    position:relative;z-index:1;
+    border-top:1px solid var(--border);
+    padding:3.5rem 0 2.2rem;
+  }
+  .footer-grid{
+    display:grid;
+    grid-template-columns:1.2fr 1fr 1fr;
+    align-items:flex-start;
+    gap:2.4rem;
+    margin-bottom:2.4rem;
+  }
+  .footer-brand p{color:var(--text-dim);font-size:.9rem;max-width:320px;margin-top:.7rem;}
+  .footer-logos{
+    display:flex;
+    align-items:center;
+    gap:.9rem;
+    margin-top:1.2rem;
+  }
+  .footer-logos img{height:42px;width:auto;object-fit:contain;opacity:.9;}
+  .footer-col b{
+    display:block;font-family:var(--font-mono);font-size:.75rem;
+    text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:.9rem;
+  }
+  .footer-col a{
+    display:block;color:var(--text-dim);font-size:.92rem;padding:.35rem 0;
+    transition:color .2s ease;
+  }
+  .footer-col a:hover{color:var(--cyan);}
+  .credit-block{margin-bottom:1.1rem;}
+  .credit-block:last-child{margin-bottom:0;}
+  .credit-role{
+    font-family:var(--font-mono);
+    font-size:.68rem;
+    color:var(--magenta);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:.3rem;
+  }
+  .credit-person{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:.6rem;
+    font-size:.92rem;
+    color:var(--text);
+    padding:.3rem 0;
+  }
+  .credit-socials{display:flex;gap:.5rem;}
+  .credit-socials a{
+    width:26px;height:26px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text-faint);
+    padding:0;
+    transition:color .2s ease, border-color .2s ease, transform .2s ease;
+  }
+  .credit-socials a:hover{color:var(--cyan);border-color:var(--cyan);transform:translateY(-2px);}
+  .footer-bottom{
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:.8rem;
+    padding-top:1.8rem;
+    border-top:1px solid var(--border);
+    font-family:var(--font-mono);
+    font-size:.78rem;
+    color:var(--text-faint);
+  }
+  .footer-bottom .fb-left{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+  .admin-link{
+    color:var(--text-faint);
+    transition:color .2s ease;
+    border-bottom:1px dotted var(--text-faint);
+  }
+  .admin-link:hover{color:var(--cyan);border-color:var(--cyan);}
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width:900px){
+    .nav-tabs{display:none;}
+    .burger{display:flex;}
+    .hero-grid{grid-template-columns:1fr;}
+    .grid-2, .grid-2.grid-2--dual{grid-template-columns:1fr;}
+    .field-grid, .field-grid.three{grid-template-columns:1fr;}
+    .trx-fields{grid-template-columns:1fr;}
+    .section{padding:5rem 0;}
+    .blog-grid{grid-template-columns:1fr;}
+    .about-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr;gap:2rem;}
+  }
+  @media (max-width:520px){
+    .wrap{padding:0 20px;}
+    .stats-row{gap:1.4rem;}
+    .cta-row .btn{width:100%;justify-content:center;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .blob, .badge .pulse, .cursor-blink{animation:none !important;}
+    [data-reveal]{opacity:1;transform:none;transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-layer" aria-hidden="true">
+  <div class="bg-grid"></div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+
+<nav class="nav">
+  <div class="wrap">
+    <a href="#home" class="brand">
+      <span class="dots"><span></span><span></span><span></span></span>
+      <span>VUPC<br><small>Code Harbor</small></span>
+    </a>
+
+    <div class="nav-tabs" role="navigation" aria-label="Sections">
+      <a class="nav-tab active" href="#home" id="navHome"><span class="tdot"></span>Home</a>
+      <a class="nav-tab" href="#bootcamp"><span class="tdot"></span>Bootcamp</a>
+      <a class="nav-tab" href="#mocktest"><span class="tdot"></span>Mock Test</a>
+      <a class="nav-tab" href="#contest"><span class="tdot"></span>Contest</a>
+      <a class="nav-tab" href="#blog"><span class="tdot"></span>Blog</a>
+      <a class="nav-tab" href="#about"><span class="tdot"></span>About Us</a>
+    </div>
+
+    <a href="#register" class="nav-cta">Register Team</a>
+
+    <button class="burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobilePanel">
+      <span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="brand-strip">
+  <span class="bs-label">presented by</span>
+  <img src="assets/vu-logo.png" alt="Varendra University logo">
+  <div class="bs-sep"></div>
+  <img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo">
+  <div class="bs-sep"></div>
+  <img src="assets/vupc-logo.png" alt="VUPC — Varendra University Programming Club logo">
+</div>
+
+<div class="mobile-panel" id="mobilePanel">
+  <a href="#home" id="navHomeMobile">Home</a>
+  <a href="#bootcamp">Bootcamp</a>
+  <a href="#mocktest">Mock Test</a>
+  <a href="#contest">Contest</a>
+  <a href="#blog">Blog</a>
+  <a href="#about">About Us</a>
+  <a href="#register" class="btn btn-primary mp-cta">Register Team</a>
+</div>
+
+<main>
+
+  <!-- HOME -->
+  <section id="home" class="section hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="badge"><span class="pulse"></span> Season 5 is here</div>
+        <h1>CODE <span class="grad-text">HARBOR</span></h1>
+        <div class="theme-line">Navigating Challenges — Season 5</div>
+        <p class="desc">The ultimate inter-university programming battle, hosted by the Varendra University Programming Club and the Dept. of CSE. Bring your team and chart a course through the toughest problems on the harbor.</p>
+
+        <div class="stats-row">
+          <div class="stat"><b>3</b><span>Members / Team</span></div>
+          <div class="stat"><b>200+</b><span>Teams Expected</span></div>
+          <div class="stat"><b>৳15,000+</b><span>Prize Pool</span></div>
+        </div>
+
+        <div class="cta-row">
+          <a href="#register" class="btn btn-primary">Claim Your Spot →</a>
+          <a href="#contest" class="btn btn-outline">View Contest Details</a>
+        </div>
+      </div>
+
+      <div class="terminal" data-reveal>
+        <div class="terminal-head">
+          <span></span><span></span><span></span>
+          <em>Welcome Coders</em>
+        </div>
+        <div class="terminal-body" id="typedTerminal"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOTCAMP -->
+  <section id="bootcamp" class="section">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Bootcamp</div>
+        <h2 class="section-title">1st &amp; 2nd Semester Bootcamp</h2>
+        <p class="section-sub">Dedicated problem-solving training to kickstart your programming journey.</p>
+      </div>
+
+      <div class="grid-2 grid-2--dual">
+        <div class="panel" data-reveal>
+          <div class="panel-head"><span></span><span></span><span></span><em>Track 01</em></div>
+          <div class="panel-body">
+            <h3>&lt;/&gt; Track 1: Basic for Competitive Programming</h3>
+            <ul class="check-list">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10" opacity=".25"/><path d="M7 12.5l3 3 7-7"/></svg>
+                Data types, conditions, loops, and logic building.
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10" opacity=".25"/><path d="M7 12.5l3 3 7-7"/></svg>
+                Arrays, strings &amp; problem solving on VJudge.
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10" opacity=".25"/><path d="M7 12.5l3 3 7-7"/></svg>
+                C++ Standard Template Library essentials (Vector, Set, Map).
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10" opacity=".25"/><path d="M7 12.5l3 3 7-7"/></svg>
+                Basic sorting, complexity &amp; contest strategies.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel" data-reveal>
+          <div class="panel-head"><span></span><span></span><span></span><em>Schedule</em></div>
+          <div class="panel-body">
+            <h3>📅 Training Camp &amp; CP Prep</h3>
+
+            <div class="day-block">
+              <span class="day-date">Registration</span>
+              <div class="slot"><span>Open for entries</span><b>Aug 3 – Aug 17, 2026</b></div>
+            </div>
+
+            <div class="day-block">
+              <span class="day-date">August 9, 2026 — Training Camp</span>
+              <div class="slot-venue">Venue: Auditorium</div>
+              <div class="slot"><span>Reporting</span><b>9:00 – 9:15 AM</b></div>
+              <div class="slot"><span>Welcome Speech</span><b>9:30 – 10:00 AM</b></div>
+              <div class="slot"><span>Session 1 (all participants)</span><b>10:00 – 11:30 AM</b></div>
+              <div class="slot"><span>Break</span><b>11:30 – 11:45 AM</b></div>
+              <div class="slot"><span>Session 2 (1st &amp; 2nd Sem)</span><b>11:45 AM – 1:15 PM</b></div>
+              <div class="slot-venue">Venue: CSE Lab</div>
+              <div class="slot"><span>Session 2 (Senior Students)</span><b>11:45 AM – 1:15 PM</b></div>
+            </div>
+
+            <div class="day-block">
+              <span class="day-date">Aug 10 – Aug 23, 2026 — Online</span>
+              <div class="slot"><span>CP Training (1st &amp; 2nd Semester only)</span><b>Ongoing</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOCK TEST -->
+  <section id="mocktest" class="section">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Mock Test</div>
+        <h2 class="section-title">Online Mock Contest</h2>
+        <p class="section-sub">Get familiar with the contest platform, system rules &amp; environment.</p>
+      </div>
+
+      <div class="panel" style="max-width:640px" data-reveal>
+        <div class="panel-head"><span></span><span></span><span></span><em>Schedule</em></div>
+        <div class="panel-body">
+          <div class="info-row">
+            <div class="icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div><b>Date &amp; Time</b><p>August 25, 2026 (08:00 PM – 10:00 PM)</p></div>
+          </div>
+          <div class="info-row">
+            <div class="icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z"/></svg>
+            </div>
+            <div><b>Platform</b><p>VJudge / Codeforces Group</p></div>
+          </div>
+          <a href="#" class="btn btn-primary" style="margin-top:1.6rem">Register →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTEST -->
+  <section id="contest" class="section">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Contest</div>
+        <h2 class="section-title">Code Harbor 2026 — Main Contest</h2>
+        <p class="section-sub">The ultimate battleground for departmental programmers.</p>
+      </div>
+
+      <div class="panel" style="max-width:640px" data-reveal>
+        <div class="panel-head"><span></span><span></span><span></span><em> — Contest Day</em></div>
+        <div class="panel-body">
+
+          <div class="day-block">
+            <span class="day-date">August 27, 2026</span>
+            <div class="slot-venue">Venue: Plaza Area</div>
+            <div class="slot"><span>Reporting</span><b>8:15 – 9:00 AM</b></div>
+            <div class="slot"><span>Opening Ceremony</span><b>9:00 – 9:30 AM</b></div>
+            <div class="slot-venue">Venue: CSE Lab</div>
+            <div class="slot"><span>Programming Contest</span><b>9:30 AM – 1:30 PM</b></div>
+            <div class="slot"><span>Lunch Break</span><b>1:30 – 2:00 PM</b></div>
+            <div class="slot-venue">Venue: Auditorium</div>
+            <div class="slot"><span>Prize Giving Ceremony</span><b>2:00 – 3:30 PM</b></div>
+          </div>
+
+          <div class="fee-strip">
+            <span class="fee-amt">Registration Window: Aug 3 – Aug 17, 2026</span>
+          </div>
+
+          <a href="#register" class="btn btn-primary" style="margin-top:1.6rem">Register for Track 1 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section id="blog" class="section">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Blog</div>
+        <h2 class="section-title">Notes from the VUPC</h2>
+        <p class="section-sub">Stories, write-ups &amp; announcements from the VUPC team. Placeholder content for now.</p>
+      </div>
+
+      <div class="blog-grid">
+
+        <article class="panel blog-card" data-reveal>
+          <div class="blog-thumb"><img src="assets/blog1-codeharbor.jpg" alt="Code Harbor: Navigating Challenges — Season 5, coming soon"></div>
+          <div class="panel-body">
+            <div class="blog-meta">Aug 01, 2026 · Announcements</div>
+            <h4>Code Harbor: Navigating Challenges — Season 5</h4>
+            <p class="blog-excerpt">Registration is open from Aug 3–17, 2026. Here's the full schedule — training camp, online CP prep, and contest day — plus what your ৳510 registration fee gets you.</p>
+            <div class="blog-more">
+              <p><strong>Event Details</strong><br>
+              Registration: Aug 3 – Aug 17, 2026<br>
+              Training Camp: Aug 9, 2026 (Auditorium &amp; CSE Lab)<br>
+              Online CP Training (1st &amp; 2nd Sem): Aug 10 – Aug 23, 2026<br>
+              Main Contest: Aug 27, 2026 — Plaza Area, CSE Lab &amp; Auditorium</p>
+              <p><strong>Registration Fee: ৳510</strong><br>
+              Includes Certificate, T-shirts, Lunch, Snacks, and more.<br>
+              Prize pool: ৳15,000+</p>
+            </div>
+            <button class="read-more-btn" data-target="blog1">Read More
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </article>
+
+        <article class="panel blog-card" data-reveal>
+          <div class="blog-thumb"><img src="assets/blog2-ictfest.jpg" alt="VUPC team at IUT 12th ICT Fest 2026"></div>
+          <div class="panel-body">
+            <div class="blog-meta">Jul 27, 2026 · Club Journey</div>
+            <h4>VUPC at the IUT Inter University Programming Contest 2026</h4>
+            <p class="blog-excerpt">Varendra University proudly competed in the IUT Inter University Programming Contest (IUPC) 2026 against 110+ teams from universities across the country.</p>
+            <div class="blog-more">
+              <p>🏆 <strong>VU_Phantom_Troupe</strong> led the way, securing an impressive <strong>62nd position</strong> overall. Congratulations to the team: Ashraful Ratul (CSE'35), Md. Kausar Babu (CSE'33), and Istiak Ahmed (CSE'33).</p>
+              <p>The same trio also represented VUPC at the IUT 12th ICT Fest 2026, continuing the club's push into inter-university competitive programming.</p>
+              <a href="https://www.facebook.com/share/p/1CwrW6xx5y/" target="_blank" rel="noopener" class="blog-link">View the full post on Facebook →</a>
+            </div>
+            <button class="read-more-btn" data-target="blog2">Read More
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </article>
+
+        <article class="panel blog-card" data-reveal>
+          <div class="blog-thumb"><img src="assets/blog3-cppbootcamp.jpg" alt="Free C++ Basics &amp; STL Bootcamp by VUPC"></div>
+          <div class="panel-body">
+            <div class="blog-meta">Jul 01, 2026 · Bootcamp</div>
+            <h4>Free C++ Basics &amp; STL Bootcamp by VUPC</h4>
+            <p class="blog-excerpt">Want to build a strong programming foundation and start your competitive programming journey? VUPC ran a free C++ Basics &amp; STL bootcamp, conducted by Istiak Hasan Neaz (Codeforces: neaz_1019).</p>
+            <div class="blog-more">
+              <p>📌 Eligibility: All Varendra University students<br>
+              ⭐ Highly Recommended: 37th &amp; 38th Batch<br>
+              💸 Fee: Completely FREE<br>
+              📅 Held: 03 July, 2026 · Online Class</p>
+              <p>Covered master fundamentals (data types, control flow, pointers) and STL power (vectors, sets, maps, algorithmic efficiency) — open for all students.</p>
+              <a href="https://www.facebook.com/share/p/1HaB7bdpp7/" target="_blank" rel="noopener" class="blog-link">View the full post on Facebook →</a>
+            </div>
+            <button class="read-more-btn" data-target="blog3">Read More
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT US -->
+  <section id="about" class="section">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">About Us</div>
+        <h2 class="section-title">About VUPC</h2>
+        <p class="section-sub">A student-driven club, backed by the department, built for problem solvers.</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="panel" data-reveal>
+          <div class="panel-head"><span></span><span></span><span></span><em>vupc.md</em></div>
+          <div class="panel-body">
+            <h3>VUPC</h3>
+            <p>The Varendra University Programming Club (VUPC) is a student-run community dedicated to competitive programming, problem solving, and building a culture of algorithmic thinking on campus.</p>
+            <p>We run regular practice sessions, bootcamps, and contests — Code Harbor is our flagship annual event.</p>
+          </div>
+        </div>
+        <div class="panel" data-reveal>
+          <div class="panel-head"><span></span><span></span><span></span><em>dept-cse.md</em></div>
+          <div class="panel-body">
+            <h3>Dept. of CSE</h3>
+            <p>The Department of Computer Science &amp; Engineering, Varendra University, provides academic and logistical support for VUPC's initiatives — from lab access to faculty mentorship.</p>
+            <p>Together, we aim to give every CSE student a real shot at competitive programming.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGISTER -->
+   
+  <section id="register" class="section">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Registration</div>
+        <h2 class="section-title">Official Team Registration</h2>
+        <p class="section-sub">Lock in your squad before the harbor closes. Registration window: <strong style="color:var(--text)">Aug 3 – Aug 17, 2026</strong>.</p>
+      </div>
+
+      <div class="panel form-panel" style="margin-bottom:1.6rem" data-reveal>
+        <div class="panel-head"><span></span><span></span><span></span><em>fee.json</em></div>
+        <div class="panel-body" style="padding:1.6rem 1.6rem 1.8rem">
+          <div class="fee-strip" style="margin-top:0">
+            <span class="fee-amt">Registration Fee: ৳510 / team</span>
+            <span class="fee-note">Includes Certificate, T-shirts, Lunch, Snacks &amp; more</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="panel form-panel" data-reveal>
+        <div class="panel-head"><span></span><span></span><span></span><em>register.exe</em></div>
+        <div class="panel-body">
+
+<!-- Include CDN Libraries for PDF Generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Multi-step Form -->
+<form id="regForm" onsubmit="handleRegistrationSubmit(event)">
+  
+  <!-- Step Navigation Indicators -->
+  <div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-size: 0.85rem;">
+    <span id="st-1" style="color: var(--accent); font-weight: bold;">1. Team Info</span>
+    <span id="st-2" style="opacity: 0.5;">2. Member 1</span>
+    <span id="st-3" style="opacity: 0.5;">3. Member 2</span>
+    <span id="st-4" style="opacity: 0.5;">4. Member 3</span>
+    <span id="st-5" style="opacity: 0.5;">5. Payment</span>
+    <span id="st-6" style="opacity: 0.5;">6. Confirm</span>
+  </div>
+
+  <!-- STEP 1: Team Details -->
+  <div class="step-page" id="step-1">
+    <p class="form-hint">Enter your team details below. Fields marked * are required.</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="teamName">Team Name <span class="req">*</span></label>
+        <input id="teamName" placeholder="e.g. Byte Pirates" required type="text">
+      </div>
+      <div class="field">
+        <label for="teamEmail">Contact Email <span class="req">*</span></label>
+        <input id="teamEmail" placeholder="team@example.com" required type="email">
+      </div>
+    </div>
+    <div style="text-align: right; margin-top: 1.5rem;">
+      <button class="btn btn-primary" onclick="goToStep(2)" type="button">Next Step &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Member 1 (Leader) Details -->
+  <div class="step-page" id="step-2" style="display: none;">
+    <p class="form-hint" style="color: var(--accent); font-weight: bold;">MEMBER 1 (TEAM LEADER) DETAILS</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="m1_name">Full Name <span class="req">*</span></label>
+        <input id="m1_name" placeholder="Full name" type="text">
+      </div>
+      <div class="field">
+        <label for="m1_id">Student ID <span class="req">*</span></label>
+        <input id="m1_id" placeholder="e.g. 2103xxx" type="text">
+      </div>
+      <div class="field">
+        <label for="m1_sem">Semester <span class="req">*</span></label>
+        <select id="m1_sem" style="color: #000;">
+          <option value="" disabled selected>Select semester</option>
+          <option value="1st">1st Semester</option>
+          <option value="2nd">2nd Semester</option>
+          <option value="3rd">3rd Semester</option>
+          <option value="4th">4th Semester</option>
+          <option value="5th">5th Semester</option>
+          <option value="6th">6th Semester</option>
+          <option value="7th">7th Semester</option>
+          <option value="8th">8th Semester</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="m1_phone">Mobile Number <span class="req">*</span></label>
+        <input id="m1_phone" placeholder="01XXXXXXXXX" type="tel">
+      </div>
+      <div class="field">
+        <label for="m1_email">Email <span class="req">*</span></label>
+        <input id="m1_email" placeholder="name@example.com" type="email">
+      </div>
+      <div class="field">
+        <label for="m1_shirt">T-Shirt Size <span class="req">*</span></label>
+        <select id="m1_shirt" style="color: #000;">
+          <option value="" disabled selected>Select size</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+        </select>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+      <button class="btn" onclick="goToStep(1)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
+      <button class="btn btn-primary" onclick="goToStep(3)" type="button">Next Step &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Member 2 Details -->
+  <div class="step-page" id="step-3" style="display: none;">
+    <p class="form-hint" style="color: var(--accent); font-weight: bold;">MEMBER 2 DETAILS</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="m2_name">Full Name <span class="req">*</span></label>
+        <input id="m2_name" placeholder="Full name" type="text">
+      </div>
+      <div class="field">
+        <label for="m2_id">Student ID <span class="req">*</span></label>
+        <input id="m2_id" placeholder="e.g. 2103xxx" type="text">
+      </div>
+      <div class="field">
+        <label for="m2_sem">Semester <span class="req">*</span></label>
+        <select id="m2_sem" style="color: #000;">
+          <option value="" disabled selected>Select semester</option>
+          <option value="1st">1st Semester</option>
+          <option value="2nd">2nd Semester</option>
+          <option value="3rd">3rd Semester</option>
+          <option value="4th">4th Semester</option>
+          <option value="5th">5th Semester</option>
+          <option value="6th">6th Semester</option>
+          <option value="7th">7th Semester</option>
+          <option value="8th">8th Semester</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="m2_phone">Mobile Number <span class="req">*</span></label>
+        <input id="m2_phone" placeholder="01XXXXXXXXX" type="tel">
+      </div>
+      <div class="field">
+        <label for="m2_email">Email <span class="req">*</span></label>
+        <input id="m2_email" placeholder="name@example.com" type="email">
+      </div>
+      <div class="field">
+        <label for="m2_shirt">T-Shirt Size <span class="req">*</span></label>
+        <select id="m2_shirt" style="color: #000;">
+          <option value="" disabled selected>Select size</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+        </select>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+      <button class="btn" onclick="goToStep(2)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
+      <button class="btn btn-primary" onclick="goToStep(4)" type="button">Next Step &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Member 3 Details -->
+  <div class="step-page" id="step-4" style="display: none;">
+    <p class="form-hint" style="color: var(--accent); font-weight: bold;">MEMBER 3 DETAILS</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="m3_name">Full Name <span class="req">*</span></label>
+        <input id="m3_name" placeholder="Full name" type="text">
+      </div>
+      <div class="field">
+        <label for="m3_id">Student ID <span class="req">*</span></label>
+        <input id="m3_id" placeholder="e.g. 2103xxx" type="text">
+      </div>
+      <div class="field">
+        <label for="m3_sem">Semester <span class="req">*</span></label>
+        <select id="m3_sem" style="color: #000;">
+          <option value="" disabled selected>Select semester</option>
+          <option value="1st">1st Semester</option>
+          <option value="2nd">2nd Semester</option>
+          <option value="3rd">3rd Semester</option>
+          <option value="4th">4th Semester</option>
+          <option value="5th">5th Semester</option>
+          <option value="6th">6th Semester</option>
+          <option value="7th">7th Semester</option>
+          <option value="8th">8th Semester</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="m3_phone">Mobile Number <span class="req">*</span></label>
+        <input id="m3_phone" placeholder="01XXXXXXXXX" type="tel">
+      </div>
+      <div class="field">
+        <label for="m3_email">Email <span class="req">*</span></label>
+        <input id="m3_email" placeholder="name@example.com" type="email">
+      </div>
+      <div class="field">
+        <label for="m3_shirt">T-Shirt Size <span class="req">*</span></label>
+        <select id="m3_shirt" style="color: #000;">
+          <option value="" disabled selected>Select size</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+        </select>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+      <button class="btn" onclick="goToStep(3)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
+      <button class="btn btn-primary" onclick="goToStep(5)" type="button">Next Step &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: Payment Details -->
+  <div class="step-page" id="step-5" style="display: none;">
+    <p class="form-hint">Select payment method & enter transaction info.</p>
+    <div class="field" style="margin-bottom:1.2rem;">
+      <label for="payment">Payment Method</label>
+      <select id="payment" onchange="toggleTrxFields()" style="color: #000; background: #fff;">
+        <option value="bkash">bKash</option>
+        <option value="nagad">Nagad</option>
+        <option value="rocket">Rocket</option>
+        <option value="hand_cash">Hand Cash</option>
+      </select>
+    </div>
+    <div class="field-grid" id="trxGrid">
+      <div class="field">
+        <label for="trxId">Transaction ID <span class="req">*</span></label>
+        <input id="trxId" placeholder="e.g. 8N7K2QX9LM" type="text">
+      </div>
+      <div class="field">
+        <label for="trxPhone">Sender Mobile Number <span class="req">*</span></label>
+        <input id="trxPhone" placeholder="01XXXXXXXXX" type="tel">
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+      <button class="btn" onclick="goToStep(4)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
+      <button class="btn btn-primary" onclick="goToStep(6)" type="button">Next Step &rarr;</button>
+    </div>
+  </div>
+<!-- STEP 6: Confirmation & Official PDF Slip -->
+    <div class="step-page" id="step-6" style="display: none;">
+      <p class="form-hint">Review your details and complete registration.</p>
+      
+      <!-- Official PDF Slip Structure -->
+      <div id="slip-preview" style="background: #ffffff; color: #111111; padding: 25px; border-radius: 4px; border: 2px solid #0f172a; font-family: 'Segoe UI', sans-serif; width: 650px; margin: 0 auto 1.5rem auto;">
+        
+        <!-- Header with Logos/Names -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 15px;">
+          <div style="text-align: left;">
+            <h2 style="margin: 0; color: #1e3a8a; font-size: 20px; font-weight: bold;">VARENDRA UNIVERSITY</h2>
+            <h4 style="margin: 2px 0; color: #475569; font-size: 13px;">Department of Computer Science & Engineering</h4>
+            <span style="font-size: 11px; color: #2563eb; font-weight: bold; background: #e0e7ff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 3px;">VUPC - Varendra University Programming Club</span>
+          </div>
+          <div style="text-align: right;">
+            <h3 style="margin: 0; color: #2563eb; font-size: 16px;">CODE HARBOR 2026</h3>
+            <p style="margin: 2px 0; font-size: 10px; color: #64748b;">REGISTRATION SLIP</p>
+          </div>
+        </div>
+
+        <!-- Team Details Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 12px;">
+          <div>
+            <p style="margin: 3px 0;"><strong>Team Name:</strong> <span id="sum-team" style="color: #1e293b; font-weight: 600;">-</span></p>
+            <p style="margin: 3px 0;"><strong>Contact Email:</strong> <span id="sum-email">-</span></p>
+          </div>
+          <div>
+            <p style="margin: 3px 0;"><strong>Payment Method:</strong> <span id="sum-method" style="text-transform: uppercase;">-</span></p>
+            <p style="margin: 3px 0;"><strong>Transaction ID/Info:</strong> <span id="sum-trx" style="color: #2563eb; font-weight: bold;">-</span></p>
+          </div>
+        </div>
+
+        <!-- Members Information Table -->
+        <h4 style="margin: 10px 0 6px 0; color: #0f172a; font-size: 13px; text-transform: uppercase;">Team Members Information</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; margin-bottom: 15px;">
+          <thead>
+            <tr style="background-color: #1e293b; color: #ffffff;">
+              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Role</th>
+              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Name</th>
+              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Student ID</th>
+              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Sem</th>
+              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Phone</th>
+              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background: #ffffff;">
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #2563eb;">Leader</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-name">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-id">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-sem">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-phone">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-size">-</td>
+            </tr>
+            <tr style="background: #f8fafc;">
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-weight: bold;">Member 2</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-name">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-id">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-sem">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-phone">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-size">-</td>
+            </tr>
+            <tr style="background: #ffffff;">
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-weight: bold;">Member 3</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-name">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-id">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-sem">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-phone">-</td>
+              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-size">-</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Footer -->
+        <div style="border-top: 1px dashed #cbd5e1; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #64748b;">
+          <span>* Please preserve this slip for event entry & t-shirt collection.</span>
+          <span>Generated on: VUPC Official Portal</span>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+        <button class="btn" onclick="goToStep(5)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
+        <button class="btn btn-primary" type="submit">Confirm & Complete Registration</button>
+      </div>
+    </div>
+
+</form>
+
+<!-- JS Scripts -->
+<script>
+  function goToStep(s) {
+    for(let i=1; i<=6; i++) {
+      document.getElementById('step-' + i).style.display = 'none';
+      document.getElementById('st-' + i).style.opacity = '0.5';
+      document.getElementById('st-' + i).style.color = 'inherit';
+    }
+    document.getElementById('step-' + s).style.display = 'block';
+    document.getElementById('st-' + s).style.opacity = '1';
+    document.getElementById('st-' + s).style.color = 'var(--accent)';
+
+    if(s === 6) {
+      document.getElementById('sum-team').innerText = document.getElementById('teamName').value || 'N/A';
+      document.getElementById('sum-email').innerText = document.getElementById('teamEmail').value || 'N/A';
+      
+      const payMethod = document.getElementById('payment').value;
+      document.getElementById('sum-method').innerText = payMethod.toUpperCase();
+      document.getElementById('sum-trx').innerText = payMethod === 'hand_cash' ? 'Hand Cash' : (document.getElementById('trxId').value || 'N/A');
+      
+      // Leader (Member 1)
+      document.getElementById('sum-m1-name').innerText = document.getElementById('m1_name')?.value || 'N/A';
+      document.getElementById('sum-m1-id').innerText = document.getElementById('m1_id')?.value || 'N/A';
+      document.getElementById('sum-m1-sem').innerText = document.getElementById('m1_sem')?.value || 'N/A';
+      document.getElementById('sum-m1-phone').innerText = document.getElementById('m1_phone')?.value || 'N/A';
+      document.getElementById('sum-m1-size').innerText = document.getElementById('m1_shirt')?.value || 'N/A';
+
+      // Member 2
+      document.getElementById('sum-m2-name').innerText = document.getElementById('m2_name')?.value || 'N/A';
+      document.getElementById('sum-m2-id').innerText = document.getElementById('m2_id')?.value || 'N/A';
+      document.getElementById('sum-m2-sem').innerText = document.getElementById('m2_sem')?.value || 'N/A';
+      document.getElementById('sum-m2-phone').innerText = document.getElementById('m2_phone')?.value || 'N/A';
+      document.getElementById('sum-m2-size').innerText = document.getElementById('m2_shirt')?.value || 'N/A';
+
+      // Member 3
+      document.getElementById('sum-m3-name').innerText = document.getElementById('m3_name')?.value || 'N/A';
+      document.getElementById('sum-m3-id').innerText = document.getElementById('m3_id')?.value || 'N/A';
+      document.getElementById('sum-m3-sem').innerText = document.getElementById('m3_sem')?.value || 'N/A';
+      document.getElementById('sum-m3-phone').innerText = document.getElementById('m3_phone')?.value || 'N/A';
+      document.getElementById('sum-m3-size').innerText = document.getElementById('m3_shirt')?.value || 'N/A';
+    }
+  }
+
+  function toggleTrxFields() {
+    const method = document.getElementById('payment').value;
+    const trxGrid = document.getElementById('trxGrid');
+    if(method === 'hand_cash') {
+      trxGrid.style.display = 'none';
+    } else {
+      trxGrid.style.display = 'grid';
+    }
+  }
+
+  // AUTO PDF GENERATE AND DOWNLOAD FUNCTION
+  async function handleRegistrationSubmit(e) {
+    if (e) e.preventDefault();
+    
+    const submitBtn = document.querySelector('#step-6 button[type="submit"]');
+    if (submitBtn) submitBtn.innerText = 'Downloading Slip...';
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const element = document.getElementById('slip-preview');
+      
+      // html2canvas converting slip to image
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Creating PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      pdf.addImage(imgData, 'PNG', 10, 15, 190, 0);
+      
+      // Auto Save Trigger
+      pdf.save('VUPC_Registration_Slip.pdf');
+
+      alert('Registration Completed Successfully! Your Registration Slip has been downloaded.');
+    } catch (err) {
+      console.error(err);
+      alert('Registration successful, but PDF auto-download encountered an issue.');
+    } finally {
+      if (submitBtn) submitBtn.innerText = 'Confirm & Complete Registration';
+    }
+  }
+</script>
+
+          <div class="success-box" id="successBox">
+            <div class="tick">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+            </div>
+            <h4>Team registered</h4>
+            <p>This is a front-end preview — connect the form to your backend to store real submissions.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+
+      <div class="footer-brand">
+        <div class="brand">
+          <span class="dots"><span></span><span></span><span></span></span>
+          <span>VUPC</span>
+        </div>
+        <p>Varendra University Programming Club, in partnership with the Dept. of CSE — building a home for competitive programmers.</p>
+        <div class="footer-logos">
+          <img src="assets/vu-logo.png" alt="Varendra University logo">
+          <img src="assets/dept-logo.png" alt="Dept. of CSE logo">
+          <img src="assets/vupc-logo.png" alt="VUPC logo">
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <b>Developed By</b>
+
+        <div class="credit-block">
+          <div class="credit-role">Frontend</div>
+          <div class="credit-person">
+            <span>Md. Iqbal Hasan</span>
+            <span class="credit-socials">
+              <a href="https://github.com/iqbalhasanshanto-dev" aria-label="GitHub" title="GitHub"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.98 5.24.98 11.52c0 4.94 3.2 9.13 7.65 10.6.56.1.76-.24.76-.54 0-.27-.01-1.15-.02-2.09-3.11.68-3.77-1.32-3.77-1.32-.51-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.69.08-.69 1.12.08 1.72 1.15 1.72 1.15 1 1.71 2.62 1.22 3.26.93.1-.72.39-1.22.71-1.5-2.48-.28-5.1-1.24-5.1-5.53 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.08 1.15.9-.25 1.86-.37 2.81-.37.95 0 1.91.13 2.81.37 2.14-1.45 3.08-1.15 3.08-1.15.61 1.53.23 2.67.11 2.95.72.78 1.15 1.78 1.15 3 0 4.3-2.63 5.24-5.12 5.52.4.35.76 1.03.76 2.08 0 1.5-.01 2.71-.01 3.08 0 .3.2.65.77.54 4.45-1.48 7.64-5.66 7.64-10.6C23.02 5.24 18.27.5 12 .5z"/></svg></a>
+              <a href="https://www.linkedin.com/in/md-iqbal-hasan-7343b6406" aria-label="LinkedIn" title="LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/></svg></a>
+            </span>
+          </div>
+          <div class="credit-person">
+            <span>Md. Asmaul Islam</span>
+            <span class="credit-socials">
+              <a href="https://github.com/asmaulislam-dev" aria-label="GitHub" title="GitHub"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.98 5.24.98 11.52c0 4.94 3.2 9.13 7.65 10.6.56.1.76-.24.76-.54 0-.27-.01-1.15-.02-2.09-3.11.68-3.77-1.32-3.77-1.32-.51-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.69.08-.69 1.12.08 1.72 1.15 1.72 1.15 1 1.71 2.62 1.22 3.26.93.1-.72.39-1.22.71-1.5-2.48-.28-5.1-1.24-5.1-5.53 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.08 1.15.9-.25 1.86-.37 2.81-.37.95 0 1.91.13 2.81.37 2.14-1.45 3.08-1.15 3.08-1.15.61 1.53.23 2.67.11 2.95.72.78 1.15 1.78 1.15 3 0 4.3-2.63 5.24-5.12 5.52.4.35.76 1.03.76 2.08 0 1.5-.01 2.71-.01 3.08 0 .3.2.65.77.54 4.45-1.48 7.64-5.66 7.64-10.6C23.02 5.24 18.27.5 12 .5z"/></svg></a>
+              <a href="https://www.linkedin.com/in/mdasmaul-islam-a3b577406" aria-label="LinkedIn" title="LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/></svg></a>
+            </span>
+          </div>
+        </div>
+
+        <div class="credit-block">
+          <div class="credit-role">Backend</div>
+          <div class="credit-person">
+            <span>Saud Ibne Rashid Rohan</span>
+            <span class="credit-socials">
+              <a href="https://github.com/Saud-Rashid" aria-label="GitHub" title="GitHub"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.98 5.24.98 11.52c0 4.94 3.2 9.13 7.65 10.6.56.1.76-.24.76-.54 0-.27-.01-1.15-.02-2.09-3.11.68-3.77-1.32-3.77-1.32-.51-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.69.08-.69 1.12.08 1.72 1.15 1.72 1.15 1 1.71 2.62 1.22 3.26.93.1-.72.39-1.22.71-1.5-2.48-.28-5.1-1.24-5.1-5.53 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.08 1.15.9-.25 1.86-.37 2.81-.37.95 0 1.91.13 2.81.37 2.14-1.45 3.08-1.15 3.08-1.15.61 1.53.23 2.67.11 2.95.72.78 1.15 1.78 1.15 3 0 4.3-2.63 5.24-5.12 5.52.4.35.76 1.03.76 2.08 0 1.5-.01 2.71-.01 3.08 0 .3.2.65.77.54 4.45-1.48 7.64-5.66 7.64-10.6C23.02 5.24 18.27.5 12 .5z"/></svg></a>
+              <a href="https://www.linkedin.com/in/saud-ibne-rashid-rohan-233825252" aria-label="LinkedIn" title="LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/></svg></a>
+            </span>
+          </div>
+          <div class="credit-person">
+            <span>Dalia Nawshin Kongkon</span>
+            <span class="credit-socials">
+              <a href="https://github.com/dalianawshinkongkon" aria-label="GitHub" title="GitHub"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.98 5.24.98 11.52c0 4.94 3.2 9.13 7.65 10.6.56.1.76-.24.76-.54 0-.27-.01-1.15-.02-2.09-3.11.68-3.77-1.32-3.77-1.32-.51-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.69.08-.69 1.12.08 1.72 1.15 1.72 1.15 1 1.71 2.62 1.22 3.26.93.1-.72.39-1.22.71-1.5-2.48-.28-5.1-1.24-5.1-5.53 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.08 1.15.9-.25 1.86-.37 2.81-.37.95 0 1.91.13 2.81.37 2.14-1.45 3.08-1.15 3.08-1.15.61 1.53.23 2.67.11 2.95.72.78 1.15 1.78 1.15 3 0 4.3-2.63 5.24-5.12 5.52.4.35.76 1.03.76 2.08 0 1.5-.01 2.71-.01 3.08 0 .3.2.65.77.54 4.45-1.48 7.64-5.66 7.64-10.6C23.02 5.24 18.27.5 12 .5z"/></svg></a>
+              <a href="https://bd.linkedin.com/in/dalia-nawshin-kongkon-9bb906389" aria-label="LinkedIn" title="LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/></svg></a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <b>Contact</b>
+        <a href="https://www.facebook.com/profile.php?id=61576290690283" target="_blank" rel="noopener">facebook.com/vupc</a>
+        <a href="#register">Register your team →</a>
+      </div>
+
+    </div>
+    <div class="footer-bottom">
+      <span class="fb-left">© 2026 VUPC <span style="opacity:.5">•</span> <a href="admin.html" class="admin-link">Admin Access</a></span>
+      <span>build passing · season_5</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ---- typing effect in hero terminal ----
+  const lines = [
+    {t:'<span class="kw">#include</span> <span class="str">&lt;iostream&gt;</span>', pause:150},
+    {t:'<span class="kw">using</span> <span class="typed">namespace</span> std;', pause:300},
+    {t:'', pause:150},
+    {t:'<span class="kw">int</span> <span class="fn">main</span>() {', pause:200},
+    {t:'&nbsp;&nbsp;cout &lt;&lt; <span class="str">"Welcome, Navigator!"</span>;', pause:200},
+    {t:'&nbsp;&nbsp;<span class="kw">return</span> 0;', pause:200},
+    {t:'}', pause:0}
+  ];
+  const termEl = document.getElementById('typedTerminal');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TYPE_DELAY_MS = 65; // 50-80ms per character for readability
+  let typingInProgress = false;
+  let typingToken = 0;
+
+  function renderStatic(){
+    termEl.innerHTML = lines.map(l => '<div>'+l.t+'</div>').join('') + '<span class="cursor-blink"></span>';
+  }
+
+  async function typeSequence(){
+    const myToken = ++typingToken;
+    typingInProgress = true;
+    termEl.innerHTML = '';
+    for(const line of lines){
+      if(myToken !== typingToken) return; // a newer run superseded this one
+      const div = document.createElement('div');
+      termEl.appendChild(div);
+      const chars = line.t.split(/(<[^>]+>)/g).filter(Boolean);
+      let buffer = '';
+      for(const chunk of chars){
+        if(myToken !== typingToken) return;
+        if(chunk.startsWith('<')){
+          buffer += chunk;
+          div.innerHTML = buffer;
+        } else {
+          for(const ch of chunk){
+            if(myToken !== typingToken) return;
+            buffer += ch;
+            div.innerHTML = buffer;
+            await new Promise(r => setTimeout(r, TYPE_DELAY_MS));
+          }
+        }
+      }
+      await new Promise(r => setTimeout(r, line.pause));
+    }
+    if(myToken !== typingToken) return;
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor-blink';
+    termEl.appendChild(cursor);
+    typingInProgress = false;
+  }
+
+  function restartTyping(){
+    if(reduceMotion){ renderStatic(); return; }
+    typeSequence();
+  }
+
+  if(reduceMotion){
+    renderStatic();
+  } else {
+    typeSequence();
+  }
+
+  // Reset & re-type whenever the user clicks Home
+  document.getElementById('navHome').addEventListener('click', restartTyping);
+  document.getElementById('navHomeMobile').addEventListener('click', restartTyping);
+
+  // Reset & re-type whenever the Home section scrolls back into view
+  const homeSection = document.getElementById('home');
+  let homeWasVisible = true; // true on initial load, so we don't double-fire immediately
+  const homeIO = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting && !homeWasVisible){
+        restartTyping();
+      }
+      homeWasVisible = entry.isIntersecting;
+    });
+  }, {threshold:.6});
+  homeIO.observe(homeSection);
+
+  // ---- scroll reveal ----
+  const revealEls = document.querySelectorAll('[data-reveal]');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        e.target.classList.add('in-view');
+        io.unobserve(e.target);
+      }
+    });
+  }, {threshold:.15});
+  revealEls.forEach(el => io.observe(el));
+
+  // ---- active nav tab on scroll ----
+  const sections = document.querySelectorAll('main section[id]');
+  const navTabs = document.querySelectorAll('.nav-tab');
+  const mobileLinks = document.querySelectorAll('.mobile-panel a');
+
+  const navIO = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const id = entry.target.id;
+        navTabs.forEach(t => t.classList.toggle('active', t.getAttribute('href') === '#'+id));
+        mobileLinks.forEach(t => t.classList.toggle('active', t.getAttribute('href') === '#'+id));
+      }
+    });
+  }, {rootMargin:'-45% 0px -45% 0px'});
+  sections.forEach(s => navIO.observe(s));
+
+  // ---- mobile menu ----
+  const burgerBtn = document.getElementById('burgerBtn');
+  const mobilePanel = document.getElementById('mobilePanel');
+  burgerBtn.addEventListener('click', () => {
+    const open = mobilePanel.classList.toggle('open');
+    burgerBtn.classList.toggle('open', open);
+    burgerBtn.setAttribute('aria-expanded', open);
+  });
+  mobileLinks.forEach(a => a.addEventListener('click', () => {
+    mobilePanel.classList.remove('open');
+    burgerBtn.classList.remove('open');
+    burgerBtn.setAttribute('aria-expanded', 'false');
+  }));
+
+  // ---- payment method: show TrxID + mobile number for mobile wallets ----
+  const paymentSelect = document.getElementById('payment');
+  const trxFields = document.getElementById('trxFields');
+  const trxId = document.getElementById('trxId');
+  const trxPhone = document.getElementById('trxPhone');
+
+  function updateTrxVisibility(){
+    const isMobileWallet = ['bkash','nagad','rocket'].includes(paymentSelect.value);
+    trxFields.classList.toggle('show', isMobileWallet);
+    trxId.required = isMobileWallet;
+    trxPhone.required = isMobileWallet;
+  }
+  paymentSelect.addEventListener('change', updateTrxVisibility);
+  updateTrxVisibility();
+
+  // ---- registration form (front-end only) ----
+  const regForm = document.getElementById('regForm');
+  const successBox = document.getElementById('successBox');
+  regForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    regForm.style.display = 'none';
+    successBox.classList.add('show');
+  });
+
+  // ---- blog read more accordion ----
+  document.querySelectorAll('.read-more-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.blog-card');
+      const expanded = card.classList.toggle('expanded');
+      btn.firstChild.textContent = expanded ? 'Read Less ' : 'Read More ';
+    });
+  });
+</script>
+
+</body>
+</html>
