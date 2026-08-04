@@ -2313,56 +2313,63 @@
   });
 </script>
 <!-- সরাসরি ফায়ারবেসে ডাটা পাঠানোর ক্লায়েন্ট-সাইড স্ক্রিপ্ট -->
+   <!-- Direct Firebase Post Script -->
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // সাইটের প্রথম/একমাত্র ফর্মটি সিলেক্ট করা
-        const form = document.querySelector("form");
+        // সাইটের প্রথম বা প্রধান ফর্ম সিলেক্ট করা
+        const regForm = document.querySelector("form");
 
-        if (form) {
-          form.addEventListener("submit", async (e) => {
-            e.preventDefault(); // পেজ যেন রিলোড না নেয়
+        if (regForm) {
+          regForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-            // ফর্মে থাকা সব ইনপুট থেকে ডাটা তুলে আনা
-            const formData = new FormData(form);
-            const data = {};
-            
-            formData.forEach((value, key) => {
-              data[key] = value;
+            // ফর্মে থাকা সব Input ধরা
+            const inputs = regForm.querySelectorAll("input, select, textarea");
+            let formData = {
+              status: "Active",
+              createdAt: new Date().toISOString()
+            };
+
+            inputs.forEach((input) => {
+              if (input.name && input.value) {
+                formData[input.name] = input.value;
+              }
             });
 
-            // ডিফল্ট ফিল্ড সেটআপ (যদি ফর্মে নাম না থাকে)
-            data.status = data.status || "Active";
-            data.createdAt = new Date().toISOString();
-            data.name = data.name || data.teamName || "New Registered Team";
-            data.email = data.email || data.contactEmail || "N/A";
-            data.gateway = data.gateway || "bKash";
-            data.trx = data.trx || "TRX" + Math.floor(100000 + Math.random() * 900000);
+            // ব্যাকআপ ফিল্ড—যদি HTML-এ name ট্যাগ না থাকে
+            const nameInput = regForm.querySelector('input[placeholder*="Team"], input[placeholder*="team"], input[type="text"]');
+            const emailInput = regForm.querySelector('input[type="email"]');
+            
+            formData.name = formData.name || formData.teamName || (nameInput ? nameInput.value : "Code Ninjas");
+            formData.email = formData.email || formData.contactEmail || (emailInput ? emailInput.value : "admin@vupc.ac.bd");
+            formData.members = formData.members || "3 Members";
+            formData.gateway = formData.gateway || "bKash";
+            formData.trx = formData.trx || "TRX" + Math.floor(100000 + Math.random() * 900000);
 
             try {
-              // সরাসরি Firebase Realtime Database-এ POST
+              // REST API দিয়ে ফায়ারবেসে সরাসরি পোস্ট করা
               const response = await fetch("https://vupc-official-web-default-rtdb.firebaseio.com/teams.json", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json"
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(formData)
               });
 
               if (response.ok) {
-                alert("Registration Successful! Data added to Firebase.");
-                form.reset();
+                alert("SUCCESS! Data saved to Firebase!");
+                regForm.reset();
               } else {
-                alert("Failed to submit! Check Firebase Security Rules.");
+                const errResult = await response.json();
+                alert("Firebase Error: " + JSON.stringify(errResult));
               }
             } catch (error) {
-              console.error("Firebase submit error:", error);
-              alert("Network error while submitting.");
+              console.error("Fetch Error:", error);
+              alert("Network Error! Check Internet or Firebase URL.");
             }
           });
         }
       });
     </script>
   </body>
-</html>
-</body>
 </html>
