@@ -9,16 +9,18 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Firebase Admin Setup
+// Firebase Admin Setup (Realtime Database URL সহ)
 const serviceAccount = require('./vupc-official-web-firebase-adminsdk-fbsvc-b9e7af3373.json');
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    // নিচে আপনার Realtime Database এর URL বসিয়ে দিন
+    databaseURL: process.env.FIREBASE_DATABASE_URL || "https://vupc-official-web-default-rtdb.firebaseio.com"
   });
 }
 
-const db = admin.firestore();
+const db = admin.database();
 
 // 1. Admin Login Route
 app.post('/api/admin/login', async (req, res) => {
@@ -47,35 +49,42 @@ app.post('/api/admin/login', async (req, res) => {
   res.json({ success: true, token });
 });
 
-// 2. Fetch Teams Route (Real Data from Firestore)
+// 2. Fetch Teams Route (Realtime Database থেকে ডাটা আনা)
 app.get('/api/admin/teams', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const snapshot = await db.collection('teams').get();
+    const ref = db.ref('teams');
+    const snapshot = await ref.once('value');
+    const data = snapshot.val();
+
     const teamsList = [];
-    
-    snapshot.forEach(doc => {
-      teamsList.push({ id: doc.id, ...doc.data() });
-    });
+    if (data) {
+      Object.keys(data).forEach(key => {
+        teamsList.push({ id: key, ...data[key] });
+      });
+    }
 
     res.json(teamsList);
   } catch (err) {
-    console.error('Error fetching Firestore data:', err);
+    console.error('Error fetching Realtime Database data:', err);
     res.status(500).json({ error: 'Failed to fetch teams data' });
   }
 });
 
-// 3. New Team Registration Route (Saves directly to Firebase)
+// 3. New Team Registration Route (Realtime Database-এ সেভ করা)
 app.post('/api/register', async (req, res) => {
   try {
     const teamData = req.body;
-    teamData.createdAt = admin.firestore.FieldValue.serverTimestamp();
-    teamData.verified = false; // default status
+    teamData.createdAt = Date.now();
+    teamData.verified = false;
 
-    const docRef = await db.collection('teams').add(teamData);
-    res.json({ success: true, id: docRef.id, message: 'Registration successful!' });
+    const ref = db.ref('teams');
+    const newTeamRef = ref.push();
+    await newTeamRef.set(teamData);
+
+    res.json({ success: true, id: newTeamRef.key, message: 'Registration successful!' });
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Failed to save registration' });
