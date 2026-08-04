@@ -2090,21 +2090,52 @@
     btn.disabled = true;
     btn.innerHTML = 'Submitting…';
 
-    setTimeout(()=>{
-      const fallbackId = 'VUPC_CH26-' + Math.random().toString(36).slice(2,7).toUpperCase();
-      const contactIdx = parseInt(wiz.contact.replace('Member ',''),10) - 1;
-      const contactMember = wiz.members[contactIdx] || {};
+    const fallbackId = 'VUPC_CH26-' + Math.random().toString(36).slice(2,7).toUpperCase();
+    const contactIdx = parseInt((wiz.contact || '1').replace('Member ',''), 10) - 1;
+    const contactMember = wiz.members[contactIdx] || wiz.members[0] || {};
 
-      // save via the shared CH_DB backend module (also read live by admin.html)
+    // ১. ফায়ারবেসে পাঠানোর জন্য সকল মেম্বার ও পেমেন্টের পূর্ণাঙ্গ ডাটা
+    const firebasePayload = {
+      name: wiz.teamName.trim(),
+      email: contactMember.email || (wiz.members[0] ? wiz.members[0].email : ''),
+      contactEmail: contactMember.email || (wiz.members[0] ? wiz.members[0].email : ''),
+      contactPhone: contactMember.mobile || '',
+      members: wiz.members.map(m => m.name.trim()).filter(Boolean).join(', '),
+      gateway: wiz.payMethod || 'bKash',
+      trx: wiz.txnId ? wiz.txnId.trim() : 'N/A',
+      trxPhone: wiz.txnPhone ? wiz.txnPhone.trim() : 'N/A',
+      status: "Active",
+      createdAt: new Date().toISOString(),
+      details: {
+        membersFull: wiz.members,
+        contactPerson: wiz.contact
+      }
+    };
+
+    // ২. সরাসরি Firebase Realtime Database-এ POST
+    fetch("https://vupc-official-web-default-rtdb.firebaseio.com/teams.json", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(firebasePayload)
+    })
+    .then(res => {
+      if (!res.ok) console.error("Firebase response error:", res.status);
+    })
+    .catch(err => console.error("Firebase network error:", err));
+
+    // ৩. পূর্বের PDF ডাউনলোড ও Success Modal লজিক
+    setTimeout(() => {
       const record = {
         teamName: wiz.teamName.trim(),
         email: contactMember.email || '',
-        members: wiz.members.map(m=>m.name.trim()).filter(Boolean).join(', '),
+        members: wiz.members.map(m => m.name.trim()).filter(Boolean).join(', '),
         gateway: wiz.payMethod,
         trxId: wiz.txnId.trim(),
         trxPhone: wiz.txnPhone.trim(),
         detail: {
-          membersFull: wiz.members.map(m=>({...m})),
+          membersFull: wiz.members.map(m => ({...m})),
           contact: wiz.contact,
         }
       };
@@ -2113,14 +2144,13 @@
       if (typeof CH_DB !== 'undefined') {
         saved = CH_DB.addTeam(record);
       } else {
-        console.error('CH_DB backend module not loaded — check that assets/backend.js is included.');
-        saved = Object.assign({id: fallbackId, registeredAt: new Date().toISOString()}, record);
+        saved = Object.assign({ id: fallbackId, registeredAt: new Date().toISOString() }, record);
       }
 
       wizLastReceipt = {
         id: saved.id || fallbackId,
         teamName: wiz.teamName.trim(),
-        members: wiz.members.map(m=>({...m})),
+        members: wiz.members.map(m => ({...m})),
         contact: wiz.contact,
         payMethod: wiz.payMethod,
         txnId: wiz.txnId.trim(),
@@ -2132,9 +2162,7 @@
       document.getElementById('teamNameText').textContent = wizLastReceipt.teamName;
       document.getElementById('successModal').classList.add('show');
 
-      // auto-download the PDF receipt immediately on successful registration
       downloadReceiptPdf();
-
       btn.disabled = false;
     }, 700);
   }
@@ -2314,57 +2342,7 @@
 </script>
 <!-- সরাসরি ফায়ারবেসে ডাটা পাঠানোর ক্লায়েন্ট-সাইড স্ক্রিপ্ট -->
    <!-- Direct Firebase Post Script -->
-   <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const regForm = document.querySelector("form");
-
-        if (regForm) {
-          // ১. টাইপিংয়ের সময় Enter চাপলে যেন ভুল করে সাবমিট না হয়ে যায়
-          regForm.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
-              e.preventDefault(); // Enter প্রেস ব্লক করা হলো
-            }
-          });
-
-          // ২. শুধুমাত্র ফাইনাল Submit বাটনে ক্লিক করলেই ডাটা ফায়ারবেসে যাবে
-          regForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            // ফর্মে থাকা সব Input, Select ও Textarea ধরা
-            const inputs = regForm.querySelectorAll("input, select, textarea");
-            let formData = {
-              status: "Active",
-              createdAt: new Date().toISOString()
-            };
-
-            inputs.forEach((input) => {
-              if (input.name && input.value) {
-                formData[input.name] = input.value;
-              }
-            });
-
-            try {
-              const response = await fetch("https://vupc-official-web-default-rtdb.firebaseio.com/teams.json", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-              });
-
-              if (response.ok) {
-                alert("SUCCESS! Full Registration Data saved to Firebase!");
-                regForm.reset();
-              } else {
-                alert("Firebase submission failed.");
-              }
-            } catch (error) {
-              console.error("Submission Error:", error);
-              alert("Network Error!");
-            }
-          });
-        }
-      });
-    </script>
+  
+  
   </body>
 </html>
