@@ -2314,16 +2314,23 @@
 </script>
 <!-- সরাসরি ফায়ারবেসে ডাটা পাঠানোর ক্লায়েন্ট-সাইড স্ক্রিপ্ট -->
    <!-- Direct Firebase Post Script -->
-    <script>
+   <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // সাইটের প্রথম বা প্রধান ফর্ম সিলেক্ট করা
         const regForm = document.querySelector("form");
 
         if (regForm) {
+          // ১. টাইপিংয়ের সময় Enter চাপলে যেন ভুল করে সাবমিট না হয়ে যায়
+          regForm.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+              e.preventDefault(); // Enter প্রেস ব্লক করা হলো
+            }
+          });
+
+          // ২. শুধুমাত্র ফাইনাল Submit বাটনে ক্লিক করলেই ডাটা ফায়ারবেসে যাবে
           regForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            // ফর্মে থাকা সব Input ধরা
+            // ফর্মে থাকা সব Input, Select ও Textarea ধরা
             const inputs = regForm.querySelectorAll("input, select, textarea");
             let formData = {
               status: "Active",
@@ -2336,18 +2343,7 @@
               }
             });
 
-            // ব্যাকআপ ফিল্ড—যদি HTML-এ name ট্যাগ না থাকে
-            const nameInput = regForm.querySelector('input[placeholder*="Team"], input[placeholder*="team"], input[type="text"]');
-            const emailInput = regForm.querySelector('input[type="email"]');
-            
-            formData.name = formData.name || formData.teamName || (nameInput ? nameInput.value : "Code Ninjas");
-            formData.email = formData.email || formData.contactEmail || (emailInput ? emailInput.value : "admin@vupc.ac.bd");
-            formData.members = formData.members || "3 Members";
-            formData.gateway = formData.gateway || "bKash";
-            formData.trx = formData.trx || "TRX" + Math.floor(100000 + Math.random() * 900000);
-
             try {
-              // REST API দিয়ে ফায়ারবেসে সরাসরি পোস্ট করা
               const response = await fetch("https://vupc-official-web-default-rtdb.firebaseio.com/teams.json", {
                 method: "POST",
                 headers: {
@@ -2357,15 +2353,14 @@
               });
 
               if (response.ok) {
-                alert("SUCCESS! Data saved to Firebase!");
+                alert("SUCCESS! Full Registration Data saved to Firebase!");
                 regForm.reset();
               } else {
-                const errResult = await response.json();
-                alert("Firebase Error: " + JSON.stringify(errResult));
+                alert("Firebase submission failed.");
               }
             } catch (error) {
-              console.error("Fetch Error:", error);
-              alert("Network Error! Check Internet or Firebase URL.");
+              console.error("Submission Error:", error);
+              alert("Network Error!");
             }
           });
         }
