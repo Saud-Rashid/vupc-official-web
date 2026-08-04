@@ -40,7 +40,16 @@
   }
 
   *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;color-scheme:dark;}
+  html{
+    scroll-behavior:smooth;
+    color-scheme:dark;
+    /* Stops mobile Chrome/Safari from auto-inflating font sizes in narrow
+       text blocks ("font boosting"). Without this, real phones render text
+       larger than desktop dev-tools mobile previews show — the exact
+       mismatch you're seeing between the mockup and the live site. */
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
   body{
     background:var(--bg);
     color:var(--text);
@@ -82,7 +91,7 @@
   .blob{
     position:absolute;
     border-radius:50%;
-    filter:blur(90px);
+    filter:blur(60px);
     mix-blend-mode:screen;
     opacity:.55;
     will-change:transform;
@@ -190,8 +199,8 @@
   /* reveal on scroll */
   [data-reveal]{
     opacity:0;
-    transform:translateY(28px);
-    transition:opacity .7s ease, transform .7s ease;
+    transform:translateY(26px);
+    transition:opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
   }
   [data-reveal].in-view{
     opacity:1;
@@ -606,8 +615,14 @@
     background:linear-gradient(180deg, rgba(10, 8, 20, 0.38), rgba(10, 8, 20, 0.0));
     border:1px solid var(--border);
     border-radius:var(--radius);
-    backdrop-filter:blur(90px) brightness(.7);
-    -webkit-backdrop-filter:blur(90px) brightness(.9);
+    /* was blur(90px) — this class sits on ~11 cards across the page (hero,
+       about, blog, register, footer). A 90px backdrop blur forces the browser
+       to re-sample and re-blur everything moving behind each of those cards
+       on every scroll frame, which is what was causing panels to render
+       blank/lag behind while scrolling on mobile. 20px still reads as
+       "frosted glass" at a fraction of the render cost. */
+    backdrop-filter:blur(20px) brightness(.7);
+    -webkit-backdrop-filter:blur(20px) brightness(.9);
     padding:0;
     overflow:hidden;
     transition:border-color .25s ease, transform .25s ease;
@@ -866,6 +881,10 @@
   .btn-back:disabled:hover{color:var(--text-dim);}
   .btn-primary:disabled{opacity:.6;cursor:default;transform:none !important;}
 
+  #regWizardPanel{
+    scroll-margin-top:calc(var(--nav-h) + var(--strip-h) + 16px);
+  }
+
   /* ---- success modal ---- */
   .modal-overlay{
     display:none;position:fixed;inset:0;z-index:2000;
@@ -1118,6 +1137,12 @@
     .blog-grid{grid-template-columns:1fr;}
     .about-grid{grid-template-columns:1fr;}
     .footer-grid{grid-template-columns:1fr;gap:2rem;}
+    /* phones have the least GPU headroom for blur — trim the always-animating
+       background blobs further so they don't compete with scroll for frames */
+    .blob{filter:blur(36px);}
+    .blob-1,.blob-2{width:340px;height:340px;}
+    .blob-3{width:220px;height:220px;}
+    .blob-4{width:180px;height:180px;}
   }
   @media (max-width:520px){
     .wrap{padding:0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));}
@@ -1218,7 +1243,7 @@
 
         <div class="stats-row">
           <div class="stat"><b>3</b><span>Members / Team</span></div>
-          <div class="stat"><b>200+</b><span>Participants Expected</span></div>
+          <div class="stat"><b>200+</b><span>Teams Expected</span></div>
           <div class="stat"><b>৳15,000+</b><span>Prize Pool</span></div>
         </div>
 
@@ -1492,7 +1517,7 @@
         </div>
       </div>
 
-      <div class="panel form-panel">
+      <div class="panel form-panel" id="regWizardPanel">
         <div class="panel-head"><span></span><span></span><span></span><em> — Registration </em></div>
         <div class="panel-body">
 
@@ -1733,7 +1758,7 @@
         io.unobserve(e.target);
       }
     });
-  }, {threshold:.15, rootMargin:'0px 0px 150px 0px'});
+  }, {threshold:.1, rootMargin:'0px 0px -60px 0px'});
   revealEls.forEach(el => io.observe(el));
 
   // ---- active nav tab on scroll ----
@@ -1862,8 +1887,10 @@
     }).join('');
     el.querySelectorAll('.step-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
+        if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
         const idx = parseInt(btn.dataset.idx,10);
         if(done[idx] || idx <= wiz.step){ wiz.step = idx; renderWizard(); }
+        scrollWizardToTop();
       });
     });
   }
@@ -2025,18 +2052,37 @@
     nextBtn.innerHTML = wiz.step<3 ? 'Next →' : 'Submit Registration';
   }
 
+  // ---- mobile fix: every step re-renders #stepContent from scratch, and each
+  // step is a different height (Members, with 3 people's worth of fields, is
+  // much taller than Payment or Confirm). Trying to restore the exact old
+  // scroll position breaks whenever the new step is shorter than the old
+  // one — that scroll position simply doesn't exist on the shorter page, so
+  // the browser clamps upward and it looks like a random jump. Instead, every
+  // Back/Next/step-dot click deliberately scrolls to the same fixed anchor —
+  // the top of the registration block — so the landing spot is always
+  // predictable no matter how tall the step content is. ----
+  function scrollWizardToTop(){
+    const panel = document.getElementById('regWizardPanel');
+    if(panel) panel.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'});
+  }
+
   document.getElementById('backBtn').addEventListener('click', ()=>{
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
     if(wiz.step>0){ wiz.step--; renderWizard(); }
+    scrollWizardToTop();
   });
 
   document.getElementById('nextBtn').addEventListener('click', ()=>{
-    if(!wizValidate(wiz.step)){ renderWizard(); return; }
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+
+    if(!wizValidate(wiz.step)){ renderWizard(); scrollWizardToTop(); return; }
     if(wiz.step<3){
       wiz.step++;
       renderWizard();
     } else {
       submitWizard();
     }
+    scrollWizardToTop();
   });
 
   function submitWizard(){

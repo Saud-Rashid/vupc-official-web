@@ -1028,6 +1028,7 @@ async function fetchLiveTeams() {
     if (res.ok) {
       teams = await res.json();
       renderTeams();
+      updateStats(teams);
     } else {
       console.error("Failed to fetch teams:", res.status);
     }
@@ -1054,9 +1055,20 @@ async function fetchLiveTeams() {
         return haystack.includes(q);
       }
 
-      function memberSummary(members) {
-        return members.map((m) => m.name).join(", ");
-      }
+      function memberSummary(team) {
+  // members name array
+  if (team.members && Array.isArray(team.members)) {
+    return team.members.map(m => typeof m === 'string' ? m : (m.name || m)).join(', ');
+  }
+  
+  // database formate
+  const membersList = [team.m1_name || team.leaderName, team.m2_name, team.m3_name].filter(Boolean);
+  if (membersList.length > 0) {
+    return membersList.join(', ');
+  }
+
+  return 'N/A';
+}
 
       function renderTeams() {
         const q = searchInput.value.trim().toLowerCase();
@@ -1079,7 +1091,7 @@ async function fetchLiveTeams() {
       <tr>
         <td><strong>${t.name}</strong></td>
         <td class="cell-faint">${t.email}</td>
-        <td class="cell-faint">${memberSummary(t.members)}</td>
+        <td class="cell-faint">${memberSummary(t)}</td>
         <td>${t.gateway}</td>
         <td class="cell-faint">${t.trx}</td>
         <td>
@@ -1107,6 +1119,33 @@ async function fetchLiveTeams() {
           btn.addEventListener("click", () => {
             openTeamModal(+btn.dataset.idx);
           });
+          function updateStats(teamsData) {
+  if (!teamsData) return;
+  const totalTeams = teamsData.length;
+  const verifiedCount = teamsData.filter(t => t.verified || t.paymentStatus === 'Verified' || t.status === 'verified').length;
+  const pendingCount = totalTeams - verifiedCount;
+  
+  let totalParticipants = 0;
+  teamsData.forEach(t => {
+    if (t.members && Array.isArray(t.members)) {
+      totalParticipants += t.members.length;
+    } else {
+      let count = 0;
+      if (t.m1_name || t.leaderName) count++;
+      if (t.m2_name) count++;
+      if (t.m3_name) count++;
+      totalParticipants += (count || 3);
+    }
+  });
+
+  const cards = document.querySelectorAll('.stat-card h2');
+  if (cards.length >= 4) {
+    cards[0].textContent = totalTeams;
+    cards[1].textContent = verifiedCount;
+    cards[2].textContent = pendingCount;
+    cards[3].textContent = totalParticipants;
+  }
+}
         });
       }
       renderTeams();
