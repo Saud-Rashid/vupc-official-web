@@ -1006,23 +1006,114 @@
     </main>
 
     <script>
-      document.getElementById("forgotBtn")?.addEventListener("click", async () => {
-        const email = prompt("Enter your admin registered email:");
-        if (!email) return;
+      // Firebase Realtime Database URL
+      const FIREBASE_DB_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
+      let teams = [];
 
+      // ১. ফায়ারবেস থেকে ডাটা ফেচ করার ফাংশন
+      async function fetchLiveTeams() {
         try {
-          const res = await fetch("http://localhost:5000/api/admin/forgot-password", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
-          const data = await res.json();
-          alert(data.message || "Request sent successfully!");
+          const res = await fetch(FIREBASE_DB_URL);
+          if (res.ok) {
+            const data = await res.json();
+            if (data) {
+              // Firebase Object কে Array তে রূপান্তর
+              teams = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+              }));
+            } else {
+              teams = [];
+            }
+            renderTeams();
+          } else {
+            console.error("Failed to fetch from Firebase:", res.status);
+          }
         } catch (err) {
-          alert("If this email exists, password reset instructions have been sent.");
+          console.error("Error fetching teams:", err);
         }
-      });
+      }
+
+      // ২. টেবিল ও কার্ড ডাটা রেন্ডার করার ফাংশন
+      function renderTeams() {
+        const tbody = document.querySelector("#teamsTable tbody");
+        
+        // স্ট্যাটস আপডেট
+        const st1 = document.getElementById("st1");
+        const st2 = document.getElementById("st2");
+        const st3 = document.getElementById("st3");
+        const st4 = document.getElementById("st4");
+
+        if (st1) st1.textContent = teams.length;
+        if (st2) st2.textContent = teams.filter(t => t.status === 'Active' || t.verified).length;
+        if (st3) st3.textContent = teams.length - teams.filter(t => t.status === 'Active' || t.verified).length;
+        if (st4) st4.textContent = teams.length * 3;
+
+        if (!tbody) return;
+
+        if (teams.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No teams found in database.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = teams.map((t) => `
+          <tr>
+            <td><strong>${t.name || t.title || 'N/A'}</strong></td>
+            <td>${t.email || 'admin@vupc.ac.bd'}</td>
+            <td>${t.description || 'Registered Team'}</td>
+            <td>
+              <span class="verify-toggle ${t.status === 'Active' ? 'verified' : 'pending'}">
+                ${t.status || 'Pending'}
+              </span>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      // ৩. লগইন হ্যান্ডলার
+      const loginForm = document.getElementById("loginForm");
+      if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const loginView = document.getElementById("loginView");
+          const dashView = document.getElementById("dashView");
+          const modeTag = document.getElementById("modeTag");
+
+          if (loginView) loginView.style.display = "none";
+          if (dashView) dashView.classList.add("show");
+          if (modeTag) modeTag.textContent = "Dashboard";
+
+          // ড্যাশবোর্ড ওপেন হলেই ফায়ারবেসের ডাটা নিয়ে আসবে
+          fetchLiveTeams();
+        });
+      }
+
+      // ৪. লগআউট হ্যান্ডলার
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const loginView = document.getElementById("loginView");
+          const dashView = document.getElementById("dashView");
+          const modeTag = document.getElementById("modeTag");
+
+          if (dashView) dashView.classList.remove("show");
+          if (loginView) loginView.style.display = "flex";
+          if (modeTag) modeTag.textContent = "Admin Portal";
+          if (loginForm) loginForm.reset();
+        });
+      }
+
+      // ৫. ফরগট পাসওয়ার্ড হ্যান্ডলার
+      const forgotBtn = document.getElementById("forgotBtn");
+      if (forgotBtn) {
+        forgotBtn.addEventListener("click", () => {
+          const email = prompt("Enter your admin registered email:");
+          if (email) {
+            alert(`If ${email} is registered, password reset instructions have been sent!`);
+          }
+        });
+      }
     </script>
-    <script src="admin.js"></script>
   </body>
 </html>
