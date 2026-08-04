@@ -1,8 +1,10 @@
+<!-- with sponser part -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Code Harbor 2026 | VUPC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +20,7 @@
     --border-bright:rgba(255,255,255,0.18);
     --text:#f5f3fa;
     --text-dim:#9b93ae;
-    --text-faint:#6b6480;
+    --text-faint:#85809b;
     --magenta:#e04fe0;
     --violet:#7c5cf5;
     --cyan:#22d3ee;
@@ -34,11 +36,11 @@
     --font-body:'Inter',sans-serif;
     --font-mono:'JetBrains Mono',monospace;
     --nav-h:76px;
-    --strip-h:78px;
+    --strip-h:78px; /* fallback estimate; dynamically updated by JS but no longer affects core layout */
   }
 
   *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth;color-scheme:dark;}
   body{
     background:var(--bg);
     color:var(--text);
@@ -128,13 +130,19 @@
   .wrap{
     max-width:1180px;
     margin:0 auto;
-    padding:0 32px;
+    padding:0 max(32px, env(safe-area-inset-right)) 0 max(32px, env(safe-area-inset-left));
   }
+  
+  main {
+    /* Accounts for both nav and brand strip being sticky */
+    padding-top: calc(var(--nav-h) + var(--strip-h));
+  }
+
   .section{
     position:relative;
     z-index:1;
     padding:7rem 0;
-    scroll-margin-top:calc(var(--nav-h) + var(--strip-h) + 12px);
+    scroll-margin-top:calc(var(--nav-h) + var(--strip-h) + 16px);
   }
   .section-head{
     max-width:640px;
@@ -190,17 +198,26 @@
     transform:translateY(0);
   }
 
+  /* ============ HEADER COMBINED ============ */
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    background:rgba(10,7,20,0.72);
+    backdrop-filter:blur(16px) saturate(140%);
+    -webkit-backdrop-filter:blur(16px) saturate(140%);
+    border-bottom:1px solid var(--border);
+  }
+
   /* ============ NAV ============ */
   .nav{
-    position:fixed;
-    top:0;left:0;right:0;
-    z-index:50;
     height:var(--nav-h);
     display:flex;
     align-items:center;
-    background:rgba(10,7,20,0.55);
-    backdrop-filter:blur(16px) saturate(140%);
-    -webkit-backdrop-filter:blur(16px) saturate(140%);
     border-bottom:1px solid var(--border);
   }
   .nav .wrap{
@@ -217,6 +234,7 @@
     font-weight:700;
     font-size:1.15rem;
   }
+  .brand-logo{height:34px;width:34px;object-fit:contain;flex:none;border-radius:8px;}
   .brand .dots{display:flex;gap:5px;}
   .brand .dots span{width:9px;height:9px;border-radius:50%;display:block;}
   .brand .dots span:nth-child(1){background:var(--red);}
@@ -304,13 +322,14 @@
   .mobile-panel{
     position:fixed;
     inset:calc(var(--nav-h) + var(--strip-h)) 0 0 0;
-    background:rgba(10,7,20,0.97);
+    background:rgba(10, 7, 20, 0.506);
     backdrop-filter:blur(10px);
     z-index:49;
     display:none;
     flex-direction:column;
-    padding:2rem 32px;
+    padding:2rem max(32px, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(32px, env(safe-area-inset-left));
     gap:.5rem;
+    overflow-y:auto;
   }
   .mobile-panel.open{display:flex;}
   .mobile-panel a{
@@ -327,24 +346,43 @@
     border:none;
   }
 
-  /* ============ BRAND STRIP (triple logo) ============ */
+  /* ============ BRAND STRIP (partner + sponsor logos) ============ */
   .brand-strip{
-    position:fixed;
-    top:var(--nav-h);
-    left:0;right:0;
-    z-index:45;
-    height:var(--strip-h);
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:1.4rem;
-    background:rgba(10,7,20,0.4);
-    backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+    row-gap:.7rem;
+    column-gap:1.4rem;
+    padding:.85rem max(20px, env(safe-area-inset-right)) .85rem max(20px, env(safe-area-inset-left));
   }
-  .brand-strip img{
+  .bs-group{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    row-gap:.6rem;
+    column-gap:1.4rem;
+  }
+  .bs-divider-v{
+    width:1px;
+    align-self:stretch;
+    min-height:32px;
+    background:var(--border-bright);
+  }
+  .bs-logo-slot{
     height:52px;
+    width:104px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+  }
+  .bs-logo-slot img{
+    max-height:100%;
+    max-width:100%;
     width:auto;
+    height:auto;
     object-fit:contain;
     filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4));
   }
@@ -359,11 +397,51 @@
     letter-spacing:.04em;
     text-transform:uppercase;
     margin-right:.2rem;
+    white-space:nowrap;
+  }
+  .sponsor-slot{
+    height:44px;
+    padding:0 .9rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px dashed var(--border-bright);
+    border-radius:8px;
+    font-family:var(--font-mono);
+    font-size:.68rem;
+    color:var(--text-faint);
+    white-space:nowrap;
+  }
+  .sponsor-slot img{height:32px;width:auto;object-fit:contain;filter:none;}
+  .sponsor-slot--add{opacity:.55;}
+  /* Real sponsor logos: wrapped in a light chip so a JPG with a plain white/solid
+     background (no transparency) still looks clean against the dark header. */
+  .sponsor-logo-chip{
+    height:44px;
+    padding:.3rem .8rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ffffff;
+    border-radius:8px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.25);
+  }
+  .sponsor-logo-chip img{
+    height:100%;
+    width:auto;
+    max-width:120px;
+    object-fit:contain;
+    filter:none;
   }
   @media (max-width:640px){
-    .brand-strip{gap:.8rem;padding:0 12px;}
-    .brand-strip img{height:36px;}
+    .brand-strip{column-gap:.8rem;padding:.75rem 14px;}
+    .bs-logo-slot{height:34px;width:72px;}
+    .sponsor-slot{height:34px;padding:0 .7rem;}
+    .sponsor-slot img{height:24px;}
+    .sponsor-logo-chip{height:34px;padding:.25rem .6rem;}
+    .sponsor-logo-chip img{max-width:90px;}
     .brand-strip span.bs-label{display:none;}
+    .bs-divider-v{display:none;}
   }
 
   /* ============ BUTTONS ============ */
@@ -394,7 +472,7 @@
 
   /* ============ HERO ============ */
   .hero{
-    padding-top:calc(var(--nav-h) + var(--strip-h) + 4rem);
+    padding-top:3.5rem;
     padding-bottom:5rem;
     position:relative;
     z-index:1;
@@ -525,10 +603,11 @@
 
   /* ============ CARDS (glass panels w/ traffic lights) ============ */
   .panel{
-    background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    background:linear-gradient(180deg, rgba(10, 8, 20, 0.38), rgba(10, 8, 20, 0.0));
     border:1px solid var(--border);
     border-radius:var(--radius);
-    backdrop-filter:blur(18px);
+    backdrop-filter:blur(90px) brightness(.7);
+    -webkit-backdrop-filter:blur(90px) brightness(.9);
     padding:0;
     overflow:hidden;
     transition:border-color .25s ease, transform .25s ease;
@@ -538,7 +617,7 @@
     display:flex;align-items:center;gap:8px;
     padding:.85rem 1.3rem;
     border-bottom:1px solid var(--border);
-    background:rgba(255,255,255,0.02);
+    background:rgba(16, 15, 31, 0.62);
   }
   .panel-head span{width:10px;height:10px;border-radius:50%;}
   .panel-head span:nth-child(1){background:var(--red);}
@@ -647,15 +726,28 @@
     border-color:var(--cyan);
     background:rgba(255,255,255,0.05);
   }
-  .field select{appearance:none;-webkit-appearance:none;
+  .field select{appearance:none;-webkit-appearance:none;-moz-appearance:none;
+    color-scheme:dark;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239b93ae' stroke-width='2'><polyline points='6 9 12 15 18 9'></polyline></svg>");
     background-repeat:no-repeat;
     background-position:right 1rem center;
+    padding-right:2.6rem;
+  }
+  /* Some Android/iOS browsers render <option> with OS-default (light) colors,
+     which can make the dropdown list look blank against light text.
+     Forcing an explicit background/color here keeps it legible everywhere. */
+  .field select option{
+    background:#15121f;
+    color:#f5f3fa;
   }
   .form-hint{
     font-size:.85rem;
     color:var(--text-faint);
     margin-bottom:1.8rem;
+  }
+  .error-msg{
+    display:block;color:var(--red);font-size:.76rem;
+    margin-top:.4rem;min-height:14px;font-family:var(--font-mono);
   }
   .trx-fields{
     display:none;
@@ -693,11 +785,156 @@
   .success-box h4{font-family:var(--font-display);font-size:1.3rem;margin-bottom:.5rem;}
   .success-box p{color:var(--text-dim);font-size:.95rem;}
 
+  /* ---- multi-step registration wizard ---- */
+  .stepper{display:flex;align-items:center;gap:6px;margin-bottom:2.2rem;}
+  .step-btn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:.4rem;cursor:pointer;flex-shrink:0;padding:0;}
+  .step-dot{
+    width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-weight:700;font-size:.85rem;
+    border:2px solid var(--border);color:var(--text-faint);
+    background:rgba(255,255,255,0.03);
+    transition:transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
+  }
+  .step-dot.active{transform:scale(1.1);}
+  .step-label{
+    font-family:var(--font-mono);font-size:.62rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);
+    display:none;
+  }
+  @media(min-width:560px){.step-label{display:block;}}
+  .step-line{flex:1;height:2px;background:var(--border);margin-bottom:1.5rem;}
+  @media(min-width:560px){.step-line{margin-bottom:1.7rem;}}
+
+  .step-card-icon{
+    width:30px;height:30px;border-radius:8px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-weight:700;font-size:.8rem;
+  }
+  .step-title-row{display:flex;align-items:center;gap:.7rem;margin-bottom:1.7rem;}
+  .step-title-row h3{font-family:var(--font-display);font-size:1.15rem;font-weight:700;margin:0;line-height:1;display:block;}
+
+  .field.error input, .field.error select{border-color:var(--red);}
+
+  .member-block{
+    background:rgba(255,255,255,0.025);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:1.3rem;
+    margin-bottom:1.1rem;
+  }
+  .member-block:last-child{margin-bottom:0;}
+  .member-tag{
+    display:inline-flex;align-items:center;gap:.4rem;
+    font-family:var(--font-mono);font-size:.7rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em;color:var(--amber);
+    margin-bottom:1rem;
+  }
+
+  .choice-row{display:flex;flex-wrap:wrap;gap:.6rem;}
+  .choice-btn{
+    padding:.65rem 1.1rem;border-radius:var(--radius-sm);
+    font-size:.86rem;font-weight:600;
+    background:rgba(255,255,255,0.03);color:var(--text);
+    border:1.5px solid var(--border);cursor:pointer;
+    transition:.15s ease;font-family:var(--font-body);
+  }
+  .choice-btn:hover{border-color:var(--border-bright);}
+  .choice-btn.active{background:var(--green);border-color:var(--green);color:var(--ink);}
+
+  .summary-box{
+    background:rgba(124,92,245,0.08);
+    border:1px solid rgba(124,92,245,0.3);
+    border-radius:var(--radius-sm);
+    padding:1.1rem 1.3rem;margin-bottom:1.3rem;font-size:.9rem;
+  }
+  .summary-box div{margin-bottom:.35rem;color:var(--text-dim);}
+  .summary-box div:last-child{margin-bottom:0;}
+  .summary-box b{color:var(--text);}
+
+  .agree-row{display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;}
+  .agree-row input{margin-top:3px;width:16px;height:16px;accent-color:var(--magenta);flex:none;}
+  .agree-row span{font-size:.9rem;color:var(--text);}
+
+  .wizard-actions{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:2rem;padding-top:1.4rem;border-top:1px solid var(--border);
+  }
+  .btn-back{background:none;color:var(--text-dim);padding:.9rem 1.1rem;font-weight:600;}
+  .btn-back:hover{color:var(--text);}
+  .btn-back:disabled{opacity:.35;cursor:default;}
+  .btn-back:disabled:hover{color:var(--text-dim);}
+  .btn-primary:disabled{opacity:.6;cursor:default;transform:none !important;}
+
+  /* ---- success modal ---- */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;z-index:2000;
+    background:rgba(5,4,10,0.82);backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-card{
+    position:relative;
+    background:var(--bg-soft);
+    border:1px solid var(--border-bright);
+    border-radius:var(--radius);
+    padding:2.2rem;max-width:440px;width:100%;text-align:center;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);
+  }
+  .modal-close{
+    position:absolute;
+    top:14px;right:14px;
+    width:32px;height:32px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .modal-close:hover{background:rgba(255,255,255,0.1);color:var(--text);border-color:var(--border-bright);}
+  .modal-icon{
+    width:60px;height:60px;border-radius:50%;
+    background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.4);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 1.1rem;color:var(--green);
+  }
+  .modal-eyebrow{
+    font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--text-faint);margin-bottom:.3rem;
+  }
+  .modal-verdict{
+    font-family:var(--font-mono);font-size:1.4rem;font-weight:700;
+    color:var(--green);margin-bottom:1.4rem;
+  }
+  .modal-details{
+    background:rgba(255,255,255,0.03);padding:1.1rem;border-radius:var(--radius-sm);
+    text-align:left;margin-bottom:.6rem;
+  }
+  .modal-details .lbl{
+    font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--text-faint);margin-bottom:.4rem;
+  }
+  .modal-id-row{display:flex;align-items:center;justify-content:center;gap:.6rem;}
+  .modal-id{font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--text);}
+  .copy-btn{
+    background:rgba(34,211,238,0.12);border:none;color:var(--cyan);
+    width:30px;height:30px;border-radius:6px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal-note{font-size:.85rem;color:var(--text-dim);margin-top:1.1rem;}
+  .download-note{
+    font-family:var(--font-mono);font-size:.72rem;color:var(--text-faint);
+    margin-top:.8rem;
+  }
+
   /* ============ BLOG ============ */
   .blog-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
     gap:1.6rem;
+    align-items:start; /* each card sizes to its own content, not the tallest sibling in the row */
   }
   .blog-card{display:flex;flex-direction:column;}
   .blog-card .blog-thumb{
@@ -724,6 +961,13 @@
     font-size:1.08rem;
     font-weight:600;
     margin-bottom:.6rem;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    line-clamp:2;
+    line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    min-height:2.7em; /* reserves 2 lines of space even for shorter titles, so cards line up */
   }
   .blog-card .blog-meta{
     font-family:var(--font-mono);
@@ -737,6 +981,12 @@
     color:var(--text-dim);
     font-size:.9rem;
     margin-bottom:1rem;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    line-clamp:3;
+    line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
   }
   .blog-more{
     max-height:0;
@@ -798,7 +1048,8 @@
     gap:.9rem;
     margin-top:1.2rem;
   }
-  .footer-logos img{height:42px;width:auto;object-fit:contain;opacity:.9;}
+  .footer-logos .fl-slot{height:42px;width:88px;display:flex;align-items:center;justify-content:flex-start;}
+  .footer-logos img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;opacity:.9;}
   .footer-col b{
     display:block;font-family:var(--font-mono);font-size:.75rem;
     text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:.9rem;
@@ -869,7 +1120,7 @@
     .footer-grid{grid-template-columns:1fr;gap:2rem;}
   }
   @media (max-width:520px){
-    .wrap{padding:0 20px;}
+    .wrap{padding:0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));}
     .stats-row{gap:1.4rem;}
     .cta-row .btn{width:100%;justify-content:center;}
   }
@@ -891,38 +1142,58 @@
   <div class="blob blob-4"></div>
 </div>
 
-<nav class="nav">
-  <div class="wrap">
-    <a href="#home" class="brand">
-      <span class="dots"><span></span><span></span><span></span></span>
-      <span>VUPC<br><small>Code Harbor</small></span>
-    </a>
+<!-- ==================== HEADER COMBINED ==================== -->
+<header class="site-header">
+  <nav class="nav">
+    <div class="wrap">
+      <a href="#home" class="brand" aria-label="VUPC Code Harbor — go to home">
+        <img src="assets/vupc-logo.png" alt="" class="brand-logo">
+        <span>VUPC<br><small>Code Harbor</small></span>
+      </a>
 
-    <div class="nav-tabs" role="navigation" aria-label="Sections">
-      <a class="nav-tab active" href="#home" id="navHome"><span class="tdot"></span>Home</a>
-      <a class="nav-tab" href="#bootcamp"><span class="tdot"></span>Bootcamp</a>
-      <a class="nav-tab" href="#mocktest"><span class="tdot"></span>Mock Test</a>
-      <a class="nav-tab" href="#contest"><span class="tdot"></span>Contest</a>
-      <a class="nav-tab" href="#blog"><span class="tdot"></span>Blog</a>
-      <a class="nav-tab" href="#about"><span class="tdot"></span>About Us</a>
+      <div class="nav-tabs" role="navigation" aria-label="Sections">
+        <a class="nav-tab active" href="#home" id="navHome"><span class="tdot"></span>Home</a>
+        <a class="nav-tab" href="#bootcamp"><span class="tdot"></span>Bootcamp</a>
+        <a class="nav-tab" href="#mocktest"><span class="tdot"></span>Mock Test</a>
+        <a class="nav-tab" href="#contest"><span class="tdot"></span>Contest</a>
+        <a class="nav-tab" href="#blog"><span class="tdot"></span>Blog</a>
+        <a class="nav-tab" href="#about"><span class="tdot"></span>About Us</a>
+      </div>
+
+      <a href="#register" class="nav-cta">Register Team →</a>
+
+      <button class="burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobilePanel">
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="brand-strip">
+    <div class="bs-group">
+      <span class="bs-label">organized by</span>
+
+      <div class="bs-logo-slot"><img src="assets/vupc-logo.png" alt="VUPC — Varendra University Programming Club logo"></div>
+
+      <div class="bs-sep"></div>
+
+      <div class="bs-logo-slot"><img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo"></div>
+
     </div>
 
-    <a href="#register" class="nav-cta">Register Team</a>
+    <div class="bs-divider-v"></div>
 
-    <button class="burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobilePanel">
-      <span></span>
-    </button>
+    <!-- SPONSORS: each real sponsor is an <img class="sponsor-logo-chip"><img></div> block.
+         "assets/s_logo.jpg" is a placeholder path — drop your actual sponsor logo file
+         into the assets/ folder using that same name (or update the src below).
+         To add another sponsor, duplicate the whole .sponsor-logo-chip block —
+         the row wraps automatically as more are added. -->
+    <div class="bs-group bs-sponsors">
+      <span class="bs-label">sponsored by</span>
+      <div class="sponsor-logo-chip"><img src="assets/s_logo.jpg" alt="Sponsor logo"></div>
+      <div class="sponsor-slot sponsor-slot--add"><span>More Slots Available</span></div>
+    </div>
   </div>
-</nav>
-
-<div class="brand-strip">
-  <span class="bs-label">presented by</span>
-  <img src="assets/vu-logo.png" alt="Varendra University logo">
-  <div class="bs-sep"></div>
-  <img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo">
-  <div class="bs-sep"></div>
-  <img src="assets/vupc-logo.png" alt="VUPC — Varendra University Programming Club logo">
-</div>
+</header>
 
 <div class="mobile-panel" id="mobilePanel">
   <a href="#home" id="navHomeMobile">Home</a>
@@ -931,7 +1202,7 @@
   <a href="#contest">Contest</a>
   <a href="#blog">Blog</a>
   <a href="#about">About Us</a>
-  <a href="#register" class="btn btn-primary mp-cta">Register Team</a>
+  <a href="#register" class="btn btn-primary mp-cta"> Register Team →</a>
 </div>
 
 <main>
@@ -947,7 +1218,7 @@
 
         <div class="stats-row">
           <div class="stat"><b>3</b><span>Members / Team</span></div>
-          <div class="stat"><b>200+</b><span>Teams Expected</span></div>
+          <div class="stat"><b>200+</b><span>Participants Expected</span></div>
           <div class="stat"><b>৳15,000+</b><span>Prize Pool</span></div>
         </div>
 
@@ -960,7 +1231,7 @@
       <div class="terminal" data-reveal>
         <div class="terminal-head">
           <span></span><span></span><span></span>
-          <em>Welcome Coders</em>
+          <em> — Welcome</em>
         </div>
         <div class="terminal-body" id="typedTerminal"></div>
       </div>
@@ -978,7 +1249,7 @@
 
       <div class="grid-2 grid-2--dual">
         <div class="panel" data-reveal>
-          <div class="panel-head"><span></span><span></span><span></span><em>Track 01</em></div>
+          <div class="panel-head"><span></span><span></span><span></span><em> — Track 01</em></div>
           <div class="panel-body">
             <h3>&lt;/&gt; Track 1: Basic for Competitive Programming</h3>
             <ul class="check-list">
@@ -1003,7 +1274,7 @@
         </div>
 
         <div class="panel" data-reveal>
-          <div class="panel-head"><span></span><span></span><span></span><em>Schedule</em></div>
+          <div class="panel-head"><span></span><span></span><span></span><em> — Schedule</em></div>
           <div class="panel-body">
             <h3>📅 Training Camp &amp; CP Prep</h3>
 
@@ -1026,7 +1297,7 @@
 
             <div class="day-block">
               <span class="day-date">Aug 10 – Aug 23, 2026 — Online</span>
-              <div class="slot"><span>CP Training (1st &amp; 2nd Semester only)</span><b>Ongoing</b></div>
+              <div class="slot"><span>CP Training (1st &amp; 2nd Semester only)</span><b>Upcoming</b></div>
             </div>
           </div>
         </div>
@@ -1044,7 +1315,7 @@
       </div>
 
       <div class="panel" style="max-width:640px" data-reveal>
-        <div class="panel-head"><span></span><span></span><span></span><em>Schedule</em></div>
+        <div class="panel-head"><span></span><span></span><span></span><em> — Schedule</em></div>
         <div class="panel-body">
           <div class="info-row">
             <div class="icon">
@@ -1058,7 +1329,6 @@
             </div>
             <div><b>Platform</b><p>VJudge / Codeforces Group</p></div>
           </div>
-          <a href="#" class="btn btn-primary" style="margin-top:1.6rem">Register →</a>
         </div>
       </div>
     </div>
@@ -1184,7 +1454,7 @@
 
       <div class="about-grid">
         <div class="panel" data-reveal>
-          <div class="panel-head"><span></span><span></span><span></span><em>vupc.md</em></div>
+          <div class="panel-head"><span></span><span></span><span></span><em> — VUPC</em></div>
           <div class="panel-body">
             <h3>VUPC</h3>
             <p>The Varendra University Programming Club (VUPC) is a student-run community dedicated to competitive programming, problem solving, and building a culture of algorithmic thinking on campus.</p>
@@ -1192,7 +1462,7 @@
           </div>
         </div>
         <div class="panel" data-reveal>
-          <div class="panel-head"><span></span><span></span><span></span><em>dept-cse.md</em></div>
+          <div class="panel-head"><span></span><span></span><span></span><em> — Department of CSE</em></div>
           <div class="panel-body">
             <h3>Dept. of CSE</h3>
             <p>The Department of Computer Science &amp; Engineering, Varendra University, provides academic and logistical support for VUPC's initiatives — from lab access to faculty mentorship.</p>
@@ -1204,7 +1474,6 @@
   </section>
 
   <!-- REGISTER -->
-   
   <section id="register" class="section">
     <div class="wrap">
       <div class="section-head" data-reveal>
@@ -1213,8 +1482,8 @@
         <p class="section-sub">Lock in your squad before the harbor closes. Registration window: <strong style="color:var(--text)">Aug 3 – Aug 17, 2026</strong>.</p>
       </div>
 
-      <div class="panel form-panel" style="margin-bottom:1.6rem" data-reveal>
-        <div class="panel-head"><span></span><span></span><span></span><em>fee.json</em></div>
+      <div class="panel form-panel" style="margin-bottom:1.6rem">
+        <div class="panel-head"><span></span><span></span><span></span><em> — Fees & Additional Info</em></div>
         <div class="panel-body" style="padding:1.6rem 1.6rem 1.8rem">
           <div class="fee-strip" style="margin-top:0">
             <span class="fee-amt">Registration Fee: ৳510 / team</span>
@@ -1222,411 +1491,23 @@
           </div>
         </div>
       </div>
-      
-      <div class="panel form-panel" data-reveal>
-        <div class="panel-head"><span></span><span></span><span></span><em>register.exe</em></div>
+
+      <div class="panel form-panel">
+        <div class="panel-head"><span></span><span></span><span></span><em> — Registration </em></div>
         <div class="panel-body">
 
-<!-- Include CDN Libraries for PDF Generation -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+          <p class="form-hint">Complete all four steps to receive your team's registration ID — a PDF receipt with everything you entered downloads automatically once you're done.</p>
 
-<!-- Multi-step Form -->
-<form id="regForm" onsubmit="handleRegistrationSubmit(event)">
-  
-  <!-- Step Navigation Indicators -->
-  <div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-size: 0.85rem;">
-    <span id="st-1" style="color: var(--accent); font-weight: bold;">1. Team Info</span>
-    <span id="st-2" style="opacity: 0.5;">2. Member 1</span>
-    <span id="st-3" style="opacity: 0.5;">3. Member 2</span>
-    <span id="st-4" style="opacity: 0.5;">4. Member 3</span>
-    <span id="st-5" style="opacity: 0.5;">5. Payment</span>
-    <span id="st-6" style="opacity: 0.5;">6. Confirm</span>
-  </div>
+          <div class="stepper" id="stepper"></div>
 
-  <!-- STEP 1: Team Details -->
-  <div class="step-page" id="step-1">
-    <p class="form-hint">Enter your team details below. Fields marked * are required.</p>
-    <div class="field-grid">
-      <div class="field">
-        <label for="teamName">Team Name <span class="req">*</span></label>
-        <input id="teamName" placeholder="e.g. Byte Pirates" required type="text">
-      </div>
-      <div class="field">
-        <label for="teamEmail">Contact Email <span class="req">*</span></label>
-        <input id="teamEmail" placeholder="team@example.com" required type="email">
-      </div>
-    </div>
-    <div style="text-align: right; margin-top: 1.5rem;">
-      <button class="btn btn-primary" onclick="goToStep(2)" type="button">Next Step &rarr;</button>
-    </div>
-  </div>
+          <form id="regForm" novalidate>
+            <div id="stepContent"></div>
 
-  <!-- STEP 2: Member 1 (Leader) Details -->
-  <div class="step-page" id="step-2" style="display: none;">
-    <p class="form-hint" style="color: var(--accent); font-weight: bold;">MEMBER 1 (TEAM LEADER) DETAILS</p>
-    <div class="field-grid">
-      <div class="field">
-        <label for="m1_name">Full Name <span class="req">*</span></label>
-        <input id="m1_name" placeholder="Full name" type="text">
-      </div>
-      <div class="field">
-        <label for="m1_id">Student ID <span class="req">*</span></label>
-        <input id="m1_id" placeholder="e.g. 2103xxx" type="text">
-      </div>
-      <div class="field">
-        <label for="m1_sem">Semester <span class="req">*</span></label>
-        <select id="m1_sem" style="color: #000;">
-          <option value="" disabled selected>Select semester</option>
-          <option value="1st">1st Semester</option>
-          <option value="2nd">2nd Semester</option>
-          <option value="3rd">3rd Semester</option>
-          <option value="4th">4th Semester</option>
-          <option value="5th">5th Semester</option>
-          <option value="6th">6th Semester</option>
-          <option value="7th">7th Semester</option>
-          <option value="8th">8th Semester</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="m1_phone">Mobile Number <span class="req">*</span></label>
-        <input id="m1_phone" placeholder="01XXXXXXXXX" type="tel">
-      </div>
-      <div class="field">
-        <label for="m1_email">Email <span class="req">*</span></label>
-        <input id="m1_email" placeholder="name@example.com" type="email">
-      </div>
-      <div class="field">
-        <label for="m1_shirt">T-Shirt Size <span class="req">*</span></label>
-        <select id="m1_shirt" style="color: #000;">
-          <option value="" disabled selected>Select size</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="XXL">XXL</option>
-        </select>
-      </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-      <button class="btn" onclick="goToStep(1)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
-      <button class="btn btn-primary" onclick="goToStep(3)" type="button">Next Step &rarr;</button>
-    </div>
-  </div>
-
-  <!-- STEP 3: Member 2 Details -->
-  <div class="step-page" id="step-3" style="display: none;">
-    <p class="form-hint" style="color: var(--accent); font-weight: bold;">MEMBER 2 DETAILS</p>
-    <div class="field-grid">
-      <div class="field">
-        <label for="m2_name">Full Name <span class="req">*</span></label>
-        <input id="m2_name" placeholder="Full name" type="text">
-      </div>
-      <div class="field">
-        <label for="m2_id">Student ID <span class="req">*</span></label>
-        <input id="m2_id" placeholder="e.g. 2103xxx" type="text">
-      </div>
-      <div class="field">
-        <label for="m2_sem">Semester <span class="req">*</span></label>
-        <select id="m2_sem" style="color: #000;">
-          <option value="" disabled selected>Select semester</option>
-          <option value="1st">1st Semester</option>
-          <option value="2nd">2nd Semester</option>
-          <option value="3rd">3rd Semester</option>
-          <option value="4th">4th Semester</option>
-          <option value="5th">5th Semester</option>
-          <option value="6th">6th Semester</option>
-          <option value="7th">7th Semester</option>
-          <option value="8th">8th Semester</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="m2_phone">Mobile Number <span class="req">*</span></label>
-        <input id="m2_phone" placeholder="01XXXXXXXXX" type="tel">
-      </div>
-      <div class="field">
-        <label for="m2_email">Email <span class="req">*</span></label>
-        <input id="m2_email" placeholder="name@example.com" type="email">
-      </div>
-      <div class="field">
-        <label for="m2_shirt">T-Shirt Size <span class="req">*</span></label>
-        <select id="m2_shirt" style="color: #000;">
-          <option value="" disabled selected>Select size</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="XXL">XXL</option>
-        </select>
-      </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-      <button class="btn" onclick="goToStep(2)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
-      <button class="btn btn-primary" onclick="goToStep(4)" type="button">Next Step &rarr;</button>
-    </div>
-  </div>
-
-  <!-- STEP 4: Member 3 Details -->
-  <div class="step-page" id="step-4" style="display: none;">
-    <p class="form-hint" style="color: var(--accent); font-weight: bold;">MEMBER 3 DETAILS</p>
-    <div class="field-grid">
-      <div class="field">
-        <label for="m3_name">Full Name <span class="req">*</span></label>
-        <input id="m3_name" placeholder="Full name" type="text">
-      </div>
-      <div class="field">
-        <label for="m3_id">Student ID <span class="req">*</span></label>
-        <input id="m3_id" placeholder="e.g. 2103xxx" type="text">
-      </div>
-      <div class="field">
-        <label for="m3_sem">Semester <span class="req">*</span></label>
-        <select id="m3_sem" style="color: #000;">
-          <option value="" disabled selected>Select semester</option>
-          <option value="1st">1st Semester</option>
-          <option value="2nd">2nd Semester</option>
-          <option value="3rd">3rd Semester</option>
-          <option value="4th">4th Semester</option>
-          <option value="5th">5th Semester</option>
-          <option value="6th">6th Semester</option>
-          <option value="7th">7th Semester</option>
-          <option value="8th">8th Semester</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="m3_phone">Mobile Number <span class="req">*</span></label>
-        <input id="m3_phone" placeholder="01XXXXXXXXX" type="tel">
-      </div>
-      <div class="field">
-        <label for="m3_email">Email <span class="req">*</span></label>
-        <input id="m3_email" placeholder="name@example.com" type="email">
-      </div>
-      <div class="field">
-        <label for="m3_shirt">T-Shirt Size <span class="req">*</span></label>
-        <select id="m3_shirt" style="color: #000;">
-          <option value="" disabled selected>Select size</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="XXL">XXL</option>
-        </select>
-      </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-      <button class="btn" onclick="goToStep(3)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
-      <button class="btn btn-primary" onclick="goToStep(5)" type="button">Next Step &rarr;</button>
-    </div>
-  </div>
-
-  <!-- STEP 5: Payment Details -->
-  <div class="step-page" id="step-5" style="display: none;">
-    <p class="form-hint">Select payment method & enter transaction info.</p>
-    <div class="field" style="margin-bottom:1.2rem;">
-      <label for="payment">Payment Method</label>
-      <select id="payment" onchange="toggleTrxFields()" style="color: #000; background: #fff;">
-        <option value="bkash">bKash</option>
-        <option value="nagad">Nagad</option>
-        <option value="rocket">Rocket</option>
-        <option value="hand_cash">Hand Cash</option>
-      </select>
-    </div>
-    <div class="field-grid" id="trxGrid">
-      <div class="field">
-        <label for="trxId">Transaction ID <span class="req">*</span></label>
-        <input id="trxId" placeholder="e.g. 8N7K2QX9LM" type="text">
-      </div>
-      <div class="field">
-        <label for="trxPhone">Sender Mobile Number <span class="req">*</span></label>
-        <input id="trxPhone" placeholder="01XXXXXXXXX" type="tel">
-      </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-      <button class="btn" onclick="goToStep(4)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
-      <button class="btn btn-primary" onclick="goToStep(6)" type="button">Next Step &rarr;</button>
-    </div>
-  </div>
-<!-- STEP 6: Confirmation & Official PDF Slip -->
-    <div class="step-page" id="step-6" style="display: none;">
-      <p class="form-hint">Review your details and complete registration.</p>
-      
-      <!-- Official PDF Slip Structure -->
-      <div id="slip-preview" style="background: #ffffff; color: #111111; padding: 25px; border-radius: 4px; border: 2px solid #0f172a; font-family: 'Segoe UI', sans-serif; width: 650px; margin: 0 auto 1.5rem auto;">
-        
-        <!-- Header with Logos/Names -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 15px;">
-          <div style="text-align: left;">
-            <h2 style="margin: 0; color: #1e3a8a; font-size: 20px; font-weight: bold;">VARENDRA UNIVERSITY</h2>
-            <h4 style="margin: 2px 0; color: #475569; font-size: 13px;">Department of Computer Science & Engineering</h4>
-            <span style="font-size: 11px; color: #2563eb; font-weight: bold; background: #e0e7ff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 3px;">VUPC - Varendra University Programming Club</span>
-          </div>
-          <div style="text-align: right;">
-            <h3 style="margin: 0; color: #2563eb; font-size: 16px;">CODE HARBOR 2026</h3>
-            <p style="margin: 2px 0; font-size: 10px; color: #64748b;">REGISTRATION SLIP</p>
-          </div>
-        </div>
-
-        <!-- Team Details Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 12px;">
-          <div>
-            <p style="margin: 3px 0;"><strong>Team Name:</strong> <span id="sum-team" style="color: #1e293b; font-weight: 600;">-</span></p>
-            <p style="margin: 3px 0;"><strong>Contact Email:</strong> <span id="sum-email">-</span></p>
-          </div>
-          <div>
-            <p style="margin: 3px 0;"><strong>Payment Method:</strong> <span id="sum-method" style="text-transform: uppercase;">-</span></p>
-            <p style="margin: 3px 0;"><strong>Transaction ID/Info:</strong> <span id="sum-trx" style="color: #2563eb; font-weight: bold;">-</span></p>
-          </div>
-        </div>
-
-        <!-- Members Information Table -->
-        <h4 style="margin: 10px 0 6px 0; color: #0f172a; font-size: 13px; text-transform: uppercase;">Team Members Information</h4>
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; margin-bottom: 15px;">
-          <thead>
-            <tr style="background-color: #1e293b; color: #ffffff;">
-              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Role</th>
-              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Name</th>
-              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Student ID</th>
-              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Sem</th>
-              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Phone</th>
-              <th style="padding: 6px 8px; border: 1px solid #1e293b;">Size</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="background: #ffffff;">
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #2563eb;">Leader</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-name">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-id">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-sem">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-phone">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m1-size">-</td>
-            </tr>
-            <tr style="background: #f8fafc;">
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-weight: bold;">Member 2</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-name">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-id">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-sem">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-phone">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m2-size">-</td>
-            </tr>
-            <tr style="background: #ffffff;">
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-weight: bold;">Member 3</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-name">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-id">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-sem">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-phone">-</td>
-              <td style="padding: 6px 8px; border: 1px solid #cbd5e1;" id="sum-m3-size">-</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Footer -->
-        <div style="border-top: 1px dashed #cbd5e1; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #64748b;">
-          <span>* Please preserve this slip for event entry & t-shirt collection.</span>
-          <span>Generated on: VUPC Official Portal</span>
-        </div>
-
-      </div>
-
-      <!-- Action Buttons -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
-        <button class="btn" onclick="goToStep(5)" style="border: 1px solid rgba(255,255,255,0.2);" type="button">&larr; Back</button>
-        <button class="btn btn-primary" type="submit">Confirm & Complete Registration</button>
-      </div>
-    </div>
-
-</form>
-
-<!-- JS Scripts -->
-<script>
-  function goToStep(s) {
-    for(let i=1; i<=6; i++) {
-      document.getElementById('step-' + i).style.display = 'none';
-      document.getElementById('st-' + i).style.opacity = '0.5';
-      document.getElementById('st-' + i).style.color = 'inherit';
-    }
-    document.getElementById('step-' + s).style.display = 'block';
-    document.getElementById('st-' + s).style.opacity = '1';
-    document.getElementById('st-' + s).style.color = 'var(--accent)';
-
-    if(s === 6) {
-      document.getElementById('sum-team').innerText = document.getElementById('teamName').value || 'N/A';
-      document.getElementById('sum-email').innerText = document.getElementById('teamEmail').value || 'N/A';
-      
-      const payMethod = document.getElementById('payment').value;
-      document.getElementById('sum-method').innerText = payMethod.toUpperCase();
-      document.getElementById('sum-trx').innerText = payMethod === 'hand_cash' ? 'Hand Cash' : (document.getElementById('trxId').value || 'N/A');
-      
-      // Leader (Member 1)
-      document.getElementById('sum-m1-name').innerText = document.getElementById('m1_name')?.value || 'N/A';
-      document.getElementById('sum-m1-id').innerText = document.getElementById('m1_id')?.value || 'N/A';
-      document.getElementById('sum-m1-sem').innerText = document.getElementById('m1_sem')?.value || 'N/A';
-      document.getElementById('sum-m1-phone').innerText = document.getElementById('m1_phone')?.value || 'N/A';
-      document.getElementById('sum-m1-size').innerText = document.getElementById('m1_shirt')?.value || 'N/A';
-
-      // Member 2
-      document.getElementById('sum-m2-name').innerText = document.getElementById('m2_name')?.value || 'N/A';
-      document.getElementById('sum-m2-id').innerText = document.getElementById('m2_id')?.value || 'N/A';
-      document.getElementById('sum-m2-sem').innerText = document.getElementById('m2_sem')?.value || 'N/A';
-      document.getElementById('sum-m2-phone').innerText = document.getElementById('m2_phone')?.value || 'N/A';
-      document.getElementById('sum-m2-size').innerText = document.getElementById('m2_shirt')?.value || 'N/A';
-
-      // Member 3
-      document.getElementById('sum-m3-name').innerText = document.getElementById('m3_name')?.value || 'N/A';
-      document.getElementById('sum-m3-id').innerText = document.getElementById('m3_id')?.value || 'N/A';
-      document.getElementById('sum-m3-sem').innerText = document.getElementById('m3_sem')?.value || 'N/A';
-      document.getElementById('sum-m3-phone').innerText = document.getElementById('m3_phone')?.value || 'N/A';
-      document.getElementById('sum-m3-size').innerText = document.getElementById('m3_shirt')?.value || 'N/A';
-    }
-  }
-
-  function toggleTrxFields() {
-    const method = document.getElementById('payment').value;
-    const trxGrid = document.getElementById('trxGrid');
-    if(method === 'hand_cash') {
-      trxGrid.style.display = 'none';
-    } else {
-      trxGrid.style.display = 'grid';
-    }
-  }
-
-  // AUTO PDF GENERATE AND DOWNLOAD FUNCTION
-  async function handleRegistrationSubmit(e) {
-    if (e) e.preventDefault();
-    
-    const submitBtn = document.querySelector('#step-6 button[type="submit"]');
-    if (submitBtn) submitBtn.innerText = 'Downloading Slip...';
-
-    try {
-      const { jsPDF } = window.jspdf;
-      const element = document.getElementById('slip-preview');
-      
-      // html2canvas converting slip to image
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
-      
-      // Creating PDF
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      pdf.addImage(imgData, 'PNG', 10, 15, 190, 0);
-      
-      // Auto Save Trigger
-      pdf.save('VUPC_Registration_Slip.pdf');
-
-      alert('Registration Completed Successfully! Your Registration Slip has been downloaded.');
-    } catch (err) {
-      console.error(err);
-      alert('Registration successful, but PDF auto-download encountered an issue.');
-    } finally {
-      if (submitBtn) submitBtn.innerText = 'Confirm & Complete Registration';
-    }
-  }
-</script>
-
-          <div class="success-box" id="successBox">
-            <div class="tick">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+            <div class="wizard-actions">
+              <button type="button" class="btn btn-back" id="backBtn">← Back</button>
+              <button type="button" class="btn btn-primary" id="nextBtn">Next →</button>
             </div>
-            <h4>Team registered</h4>
-            <p>This is a front-end preview — connect the form to your backend to store real submissions.</p>
-          </div>
+          </form>
 
         </div>
       </div>
@@ -1646,9 +1527,8 @@
         </div>
         <p>Varendra University Programming Club, in partnership with the Dept. of CSE — building a home for competitive programmers.</p>
         <div class="footer-logos">
-          <img src="assets/vu-logo.png" alt="Varendra University logo">
-          <img src="assets/dept-logo.png" alt="Dept. of CSE logo">
-          <img src="assets/vupc-logo.png" alt="VUPC logo">
+          <div class="fl-slot"><img src="assets/dept-logo.png" alt="Dept. of CSE logo"></div>
+          <div class="fl-slot"><img src="assets/vupc-logo.png" alt="VUPC logo"></div>
         </div>
       </div>
 
@@ -1701,25 +1581,81 @@
     </div>
     <div class="footer-bottom">
       <span class="fb-left">© 2026 VUPC <span style="opacity:.5">•</span> <a href="admin.html" class="admin-link">Admin Access</a></span>
-      <span>build passing · season_5</span>
+      <span>Code Harbor · season 5</span>
     </div>
   </div>
 </footer>
 
+<div class="modal-overlay" id="successModal">
+  <div class="modal-card">
+    <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Close">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="modal-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+    </div>
+    <div class="modal-eyebrow">Verdict</div>
+    <div class="modal-verdict">ACCEPTED</div>
+    <div class="modal-details">
+      <div class="lbl">Registration ID</div>
+      <div class="modal-id-row">
+        <span class="modal-id" id="regIdText"></span>
+        <button class="copy-btn" id="copyBtn" type="button" aria-label="Copy registration ID">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+        </button>
+      </div>
+    </div>
+    <p class="modal-note">Team <b id="teamNameText" style="color:var(--text)"></b> is registered. Save this ID — it's required for on-site check-in.</p>
+    <p class="download-note">Your PDF receipt should have started downloading automatically.</p>
+    <button type="button" class="btn btn-outline btn-block" id="downloadPdfBtn" style="margin-top:1rem;justify-content:center;">
+      Download PDF Receipt Again
+    </button>
+    <button type="button" class="btn btn-primary btn-block" id="modalDoneBtn" style="margin-top:.7rem;justify-content:center;">
+      Done — Back to Site
+    </button>
+  </div>
+</div>
+
+<script src="assets/backend.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+  // ---- keep --strip-h in sync with the real, rendered height of the sticky
+  // brand strip (logos + sponsors). The strip itself can no longer overlap
+  // content — position:sticky reserves its real space in the page layout on
+  // any device automatically. This value is only used to correctly offset
+  // anchor-link scrolling (scroll-margin-top) and the mobile menu overlay. ----
+  (function syncBrandStripHeight(){
+    const stripEl = document.querySelector('.brand-strip');
+    if(!stripEl) return;
+
+    function apply(){
+      document.documentElement.style.setProperty('--strip-h', stripEl.offsetHeight + 'px');
+    }
+
+    apply();
+    window.addEventListener('load', apply);
+    window.addEventListener('resize', apply);
+    window.addEventListener('orientationchange', apply);
+    if(document.fonts && document.fonts.ready){ document.fonts.ready.then(apply); }
+
+    if('ResizeObserver' in window){
+      new ResizeObserver(apply).observe(stripEl);
+    }
+  })();
+
   // ---- typing effect in hero terminal ----
   const lines = [
-    {t:'<span class="kw">#include</span> <span class="str">&lt;iostream&gt;</span>', pause:150},
-    {t:'<span class="kw">using</span> <span class="typed">namespace</span> std;', pause:300},
-    {t:'', pause:150},
-    {t:'<span class="kw">int</span> <span class="fn">main</span>() {', pause:200},
-    {t:'&nbsp;&nbsp;cout &lt;&lt; <span class="str">"Welcome, Navigator!"</span>;', pause:200},
-    {t:'&nbsp;&nbsp;<span class="kw">return</span> 0;', pause:200},
+    {t:'<span class="kw">#include</span> <span class="str">&lt;iostream&gt;</span>', pause:70},
+    {t:'<span class="kw">using</span> <span class="typed">namespace</span> std;', pause:140},
+    {t:'', pause:70},
+    {t:'<span class="kw">int</span> <span class="fn">main</span>() {', pause:90},
+    {t:'&nbsp;&nbsp;cout &lt;&lt; <span class="str">"Welcome, Coders!"</span>;', pause:90},
+    {t:'&nbsp;&nbsp;<span class="kw">return</span> 0;', pause:90},
     {t:'}', pause:0}
   ];
   const termEl = document.getElementById('typedTerminal');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const TYPE_DELAY_MS = 65; // 50-80ms per character for readability
+  const TYPE_DELAY_MS = 24; // fast, still readable
   let typingInProgress = false;
   let typingToken = 0;
 
@@ -1797,7 +1733,7 @@
         io.unobserve(e.target);
       }
     });
-  }, {threshold:.15});
+  }, {threshold:.15, rootMargin:'0px 0px 150px 0px'});
   revealEls.forEach(el => io.observe(el));
 
   // ---- active nav tab on scroll ----
@@ -1830,29 +1766,496 @@
     burgerBtn.setAttribute('aria-expanded', 'false');
   }));
 
-  // ---- payment method: show TrxID + mobile number for mobile wallets ----
-  const paymentSelect = document.getElementById('payment');
-  const trxFields = document.getElementById('trxFields');
-  const trxId = document.getElementById('trxId');
-  const trxPhone = document.getElementById('trxPhone');
+  // ============================================================
+  // Multi-step registration wizard
+  // ============================================================
+  const WIZ_STEPS = [
+    {key:'A', label:'Team Info', color:'var(--magenta)', tint:'rgba(224,79,224,0.14)'},
+    {key:'B', label:'Members',   color:'var(--amber)',   tint:'rgba(251,191,36,0.14)'},
+    {key:'C', label:'Payment',   color:'var(--cyan)',    tint:'rgba(34,211,238,0.14)'},
+    {key:'D', label:'Confirm',   color:'var(--violet)',  tint:'rgba(124,92,245,0.14)'},
+  ];
+  const SEMESTERS = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
+  const SIZES = ["S","M","L","XL","XXL"];
+  const PAY_METHODS = ["bKash","Nagad","Rocket","Bank Transfer"];
 
-  function updateTrxVisibility(){
-    const isMobileWallet = ['bkash','nagad','rocket'].includes(paymentSelect.value);
-    trxFields.classList.toggle('show', isMobileWallet);
-    trxId.required = isMobileWallet;
-    trxPhone.required = isMobileWallet;
+  function emptyMember(){ return {name:'', id:'', semester:'', mobile:'', email:'', size:''}; }
+  const wizEmailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const wizMobileRe = /^01[0-9]{9}$/;
+
+  function freshWizState(){
+    return {
+      step: 0,
+      teamName: '',
+      members: [emptyMember(), emptyMember(), emptyMember()],
+      contact: '',
+      payMethod: '',
+      txnId: '',
+      txnPhone: '',
+      agree: false,
+      errors: {},
+    };
   }
-  paymentSelect.addEventListener('change', updateTrxVisibility);
-  updateTrxVisibility();
+  let wiz = freshWizState();
+  let wizLastReceipt = null;
 
-  // ---- registration form (front-end only) ----
-  const regForm = document.getElementById('regForm');
-  const successBox = document.getElementById('successBox');
-  regForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    regForm.style.display = 'none';
-    successBox.classList.add('show');
+  function wizValidate(stepIdx){
+    const e = {};
+    if(stepIdx===0){
+      if(!wiz.teamName.trim()) e.teamName = 'Team name required.';
+    }
+    if(stepIdx===1){
+      wiz.members.forEach((m,i)=>{
+        if(!m.name.trim()) e[`m${i}name`]='Required.';
+        if(!m.id.trim()) e[`m${i}id`]='Required.';
+        if(!m.semester) e[`m${i}sem`]='Required.';
+        if(!wizMobileRe.test(m.mobile.trim())) e[`m${i}mobile`]='Valid 11-digit BD number needed.';
+        if(!wizEmailRe.test(m.email.trim())) e[`m${i}email`]='Valid email needed.';
+        if(!m.size) e[`m${i}size`]='Required.';
+      });
+    }
+    if(stepIdx===2){
+      if(!wiz.contact) e.contact='Pick a contact person.';
+      if(!wiz.payMethod) e.payMethod='Required.';
+      if(wiz.payMethod!=='Bank Transfer'){
+        if(!wiz.txnId.trim()) e.txnId='Transaction ID required.';
+        if(!wizMobileRe.test(wiz.txnPhone.trim())) e.txnPhone='Valid 11-digit BD number needed.';
+      }
+    }
+    if(stepIdx===3){
+      if(!wiz.agree) e.agree='Must confirm before submitting.';
+    }
+    wiz.errors = e;
+    return Object.keys(e).length===0;
+  }
+
+  function wizDoneSteps(){
+    return [
+      wiz.teamName.trim().length>0,
+      wiz.members.every(m=>m.name && m.id && m.semester && wizMobileRe.test(m.mobile) && wizEmailRe.test(m.email) && m.size),
+      !!wiz.contact && !!wiz.payMethod && (wiz.payMethod==='Bank Transfer' || (wiz.txnId.trim() && wizMobileRe.test(wiz.txnPhone))),
+      wiz.agree
+    ];
+  }
+
+  function wizEscape(str){
+    return String(str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderStepper(){
+    const done = wizDoneSteps();
+    const el = document.getElementById('stepper');
+    el.innerHTML = WIZ_STEPS.map((s,i)=>{
+      const isCurrent = i===wiz.step;
+      const isDone = done[i];
+      const dotStyle = (isCurrent||isDone) ? `background:${s.color};border-color:${s.color};color:var(--ink);` : '';
+      const labelStyle = isCurrent ? `color:${s.color};` : '';
+      const inner = (isDone && !isCurrent) ? '✓' : s.key;
+      let html = `<button type="button" class="step-btn" data-idx="${i}">
+        <div class="step-dot ${isCurrent?'active':''}" style="${dotStyle}">${inner}</div>
+        <div class="step-label" style="${labelStyle}">${s.label}</div>
+      </button>`;
+      if(i < WIZ_STEPS.length-1){
+        html += `<div class="step-line" style="background:${done[i]?s.color:'var(--border)'}"></div>`;
+      }
+      return html;
+    }).join('');
+    el.querySelectorAll('.step-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = parseInt(btn.dataset.idx,10);
+        if(done[idx] || idx <= wiz.step){ wiz.step = idx; renderWizard(); }
+      });
+    });
+  }
+
+  function renderStepContent(){
+    const s = WIZ_STEPS[wiz.step];
+    const content = document.getElementById('stepContent');
+    let html = `<div class="step-title-row">
+      <div class="step-card-icon" style="background:${s.tint};color:${s.color}">${s.key}</div>
+      <h3>${s.label}</h3>
+    </div>`;
+
+    if(wiz.step===0){
+      html += `<div class="field ${wiz.errors.teamName?'error':''}">
+        <label>Team Name <span class="req">*</span></label>
+        <input type="text" id="teamNameInput" placeholder="e.g. Byte Pirates" value="${wizEscape(wiz.teamName)}">
+        <span class="error-msg">${wiz.errors.teamName||''}</span>
+      </div>`;
+    }
+
+    if(wiz.step===1){
+      html += wiz.members.map((m,i)=>`
+        <div class="member-block">
+          <div class="member-tag">Member ${i+1}</div>
+          <div class="field-grid">
+            <div class="field ${wiz.errors[`m${i}name`]?'error':''}">
+              <label>Full Name <span class="req">*</span></label>
+              <input type="text" data-m="${i}" data-k="name" placeholder="Full name" value="${wizEscape(m.name)}">
+              <span class="error-msg">${wiz.errors[`m${i}name`]||''}</span>
+            </div>
+            <div class="field ${wiz.errors[`m${i}id`]?'error':''}">
+              <label>Student ID <span class="req">*</span></label>
+              <input type="text" data-m="${i}" data-k="id" placeholder="e.g. 2103xxx" value="${wizEscape(m.id)}">
+              <span class="error-msg">${wiz.errors[`m${i}id`]||''}</span>
+            </div>
+            <div class="field ${wiz.errors[`m${i}sem`]?'error':''}">
+              <label>Semester <span class="req">*</span></label>
+              <select data-m="${i}" data-k="semester">
+                <option value="" ${!m.semester?'selected':''} disabled>Select semester</option>
+                ${SEMESTERS.map(o=>`<option value="${o}" ${m.semester===o?'selected':''}>${o}</option>`).join('')}
+              </select>
+              <span class="error-msg">${wiz.errors[`m${i}sem`]||''}</span>
+            </div>
+            <div class="field ${wiz.errors[`m${i}mobile`]?'error':''}">
+              <label>Mobile Number <span class="req">*</span></label>
+              <input type="tel" data-m="${i}" data-k="mobile" placeholder="01XXXXXXXXX" value="${wizEscape(m.mobile)}">
+              <span class="error-msg">${wiz.errors[`m${i}mobile`]||''}</span>
+            </div>
+            <div class="field ${wiz.errors[`m${i}email`]?'error':''}">
+              <label>Email <span class="req">*</span></label>
+              <input type="email" data-m="${i}" data-k="email" placeholder="name@example.com" value="${wizEscape(m.email)}">
+              <span class="error-msg">${wiz.errors[`m${i}email`]||''}</span>
+            </div>
+            <div class="field ${wiz.errors[`m${i}size`]?'error':''}">
+              <label>T-Shirt Size <span class="req">*</span></label>
+              <select data-m="${i}" data-k="size">
+                <option value="" ${!m.size?'selected':''} disabled>Select size</option>
+                ${SIZES.map(o=>`<option value="${o}" ${m.size===o?'selected':''}>${o}</option>`).join('')}
+              </select>
+              <span class="error-msg">${wiz.errors[`m${i}size`]||''}</span>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    if(wiz.step===2){
+      html += `<div class="field">
+          <label>Contact Person <span class="req">*</span></label>
+          <div class="choice-row">
+            ${[0,1,2].map(i=>{
+              const label = wiz.members[i].name.trim() || `Member ${i+1}`;
+              const val = `Member ${i+1}`;
+              const active = wiz.contact===val;
+              return `<button type="button" class="choice-btn ${active?'active':''}" data-contact="${val}">${wizEscape(label)}</button>`;
+            }).join('')}
+          </div>
+          <span class="error-msg">${wiz.errors.contact||''}</span>
+        </div>
+        <div class="field">
+          <label>Payment Method <span class="req">*</span></label>
+          <div class="choice-row">
+            ${PAY_METHODS.map(v=>`<button type="button" class="choice-btn ${wiz.payMethod===v?'active':''}" data-paymethod="${v}">${v}</button>`).join('')}
+          </div>
+          <span class="error-msg">${wiz.errors.payMethod||''}</span>
+        </div>`;
+      if(wiz.payMethod && wiz.payMethod!=='Bank Transfer'){
+        html += `<div class="trx-fields show" style="margin-bottom:0">
+          <div class="trx-note">${wiz.payMethod} selected — please provide your transaction details.</div>
+          <div class="field ${wiz.errors.txnId?'error':''}" style="margin-bottom:0">
+            <label>Transaction ID <span class="req">*</span></label>
+            <input type="text" id="txnIdInput" placeholder="e.g. 8N7K2QX9LM" value="${wizEscape(wiz.txnId)}">
+            <span class="error-msg">${wiz.errors.txnId||''}</span>
+          </div>
+          <div class="field ${wiz.errors.txnPhone?'error':''}" style="margin-bottom:0">
+            <label>Sender Mobile Number <span class="req">*</span></label>
+            <input type="tel" id="txnPhoneInput" placeholder="01XXXXXXXXX" value="${wizEscape(wiz.txnPhone)}">
+            <span class="error-msg">${wiz.errors.txnPhone||''}</span>
+          </div>
+        </div>`;
+      }
+    }
+
+    if(wiz.step===3){
+      html += `<div class="summary-box">
+          <div><b>Team:</b> ${wizEscape(wiz.teamName)||'—'}</div>
+          <div><b>Members:</b> ${wiz.members.map(m=>wizEscape(m.name)).filter(Boolean).join(', ')||'—'}</div>
+          <div><b>Contact person:</b> ${wizEscape(wiz.contact)||'—'}</div>
+          <div><b>Payment:</b> ${wizEscape(wiz.payMethod)||'—'}${wiz.payMethod && wiz.payMethod!=='Bank Transfer' ? ' · TrxID ' + wizEscape(wiz.txnId) : ''}</div>
+        </div>
+        <label class="agree-row">
+          <input type="checkbox" id="agreeInput" ${wiz.agree?'checked':''}>
+          <span>We confirm that all the information provided above is correct.</span>
+        </label>
+        <span class="error-msg">${wiz.errors.agree||''}</span>`;
+    }
+
+    content.innerHTML = html;
+    attachWizardFieldListeners();
+  }
+
+  function attachWizardFieldListeners(){
+    const teamNameInput = document.getElementById('teamNameInput');
+    if(teamNameInput) teamNameInput.addEventListener('input', e=>{ wiz.teamName = e.target.value; });
+
+    document.querySelectorAll('#stepContent [data-m]').forEach(el=>{
+      const handler = e=>{
+        const i = parseInt(el.dataset.m,10), k = el.dataset.k;
+        wiz.members[i][k] = e.target.value;
+      };
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
+    });
+
+    document.querySelectorAll('[data-contact]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ wiz.contact = btn.dataset.contact; renderStepContent(); });
+    });
+    document.querySelectorAll('[data-paymethod]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        wiz.payMethod = btn.dataset.paymethod;
+        renderStepContent();
+      });
+    });
+    const txnIdInput = document.getElementById('txnIdInput');
+    if(txnIdInput) txnIdInput.addEventListener('input', e=>{ wiz.txnId = e.target.value; });
+    const txnPhoneInput = document.getElementById('txnPhoneInput');
+    if(txnPhoneInput) txnPhoneInput.addEventListener('input', e=>{ wiz.txnPhone = e.target.value; });
+
+    const agreeInput = document.getElementById('agreeInput');
+    if(agreeInput) agreeInput.addEventListener('change', e=>{ wiz.agree = e.target.checked; });
+  }
+
+  function renderWizard(){
+    renderStepper();
+    renderStepContent();
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    backBtn.disabled = wiz.step===0;
+    nextBtn.disabled = false;
+    nextBtn.innerHTML = wiz.step<3 ? 'Next →' : 'Submit Registration';
+  }
+
+  document.getElementById('backBtn').addEventListener('click', ()=>{
+    if(wiz.step>0){ wiz.step--; renderWizard(); }
   });
+
+  document.getElementById('nextBtn').addEventListener('click', ()=>{
+    if(!wizValidate(wiz.step)){ renderWizard(); return; }
+    if(wiz.step<3){
+      wiz.step++;
+      renderWizard();
+    } else {
+      submitWizard();
+    }
+  });
+
+  function submitWizard(){
+    const btn = document.getElementById('nextBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'Submitting…';
+
+    setTimeout(()=>{
+      const fallbackId = 'VUPC_CH26-' + Math.random().toString(36).slice(2,7).toUpperCase();
+      const contactIdx = parseInt(wiz.contact.replace('Member ',''),10) - 1;
+      const contactMember = wiz.members[contactIdx] || {};
+
+      // save via the shared CH_DB backend module (also read live by admin.html)
+      const record = {
+        teamName: wiz.teamName.trim(),
+        email: contactMember.email || '',
+        members: wiz.members.map(m=>m.name.trim()).filter(Boolean).join(', '),
+        gateway: wiz.payMethod,
+        trxId: wiz.txnId.trim(),
+        trxPhone: wiz.txnPhone.trim(),
+        detail: {
+          membersFull: wiz.members.map(m=>({...m})),
+          contact: wiz.contact,
+        }
+      };
+
+      let saved = record;
+      if (typeof CH_DB !== 'undefined') {
+        saved = CH_DB.addTeam(record);
+      } else {
+        console.error('CH_DB backend module not loaded — check that assets/backend.js is included.');
+        saved = Object.assign({id: fallbackId, registeredAt: new Date().toISOString()}, record);
+      }
+
+      wizLastReceipt = {
+        id: saved.id || fallbackId,
+        teamName: wiz.teamName.trim(),
+        members: wiz.members.map(m=>({...m})),
+        contact: wiz.contact,
+        payMethod: wiz.payMethod,
+        txnId: wiz.txnId.trim(),
+        txnPhone: wiz.txnPhone.trim(),
+        timestamp: new Date()
+      };
+
+      document.getElementById('regIdText').textContent = wizLastReceipt.id;
+      document.getElementById('teamNameText').textContent = wizLastReceipt.teamName;
+      document.getElementById('successModal').classList.add('show');
+
+      // auto-download the PDF receipt immediately on successful registration
+      downloadReceiptPdf();
+
+      btn.disabled = false;
+    }, 700);
+  }
+
+  function downloadReceiptPdf(){
+    if(!wizLastReceipt || !window.jspdf) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const marginX = 48;
+    let y = 56;
+
+    // Header band (VUPC brand colors)
+    doc.setFillColor(10,7,20);
+    doc.rect(0,0,pageWidth,90,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(16);
+    doc.text('Varendra University Programming Club', marginX, 38);
+    doc.setFontSize(12);
+    doc.setTextColor(224,79,224);
+    doc.text('Code Harbor 2026 — Registration Receipt', marginX, 60);
+    y = 120;
+
+    doc.setTextColor(20,20,20);
+
+    // Verdict + Reg ID box
+    doc.setDrawColor(124,92,245);
+    doc.setLineWidth(1);
+    doc.roundedRect(marginX, y, pageWidth - marginX*2, 60, 6, 6);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(120,120,120);
+    doc.text('REGISTRATION ID', marginX+16, y+22);
+    doc.setFontSize(16);
+    doc.setTextColor(124,92,245);
+    doc.text(wizLastReceipt.id, marginX+16, y+44);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(80,80,80);
+    doc.text(`Submitted: ${wizLastReceipt.timestamp.toLocaleString()}`, pageWidth - marginX - 16, y+22, {align:'right'});
+    doc.setTextColor(16,150,90);
+    doc.setFont('helvetica','bold');
+    doc.text('STATUS: ACCEPTED', pageWidth - marginX - 16, y+44, {align:'right'});
+    y += 90;
+
+    // Team name
+    doc.setTextColor(20,20,20);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.text('Team Name', marginX, y);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(12);
+    doc.text(wizLastReceipt.teamName || '-', marginX + 100, y);
+    y += 28;
+
+    // Members table
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    doc.text('Team Members', marginX, y);
+    y += 10;
+    doc.setDrawColor(220,220,220);
+    doc.line(marginX, y, pageWidth-marginX, y);
+    y += 18;
+
+    const colX = { no: marginX, name: marginX+30, id: marginX+180, sem: marginX+270, size: marginX+320 };
+    doc.setFontSize(9);
+    doc.setTextColor(120,120,120);
+    doc.text('#', colX.no, y);
+    doc.text('Name', colX.name, y);
+    doc.text('Student ID', colX.id, y);
+    doc.text('Sem', colX.sem, y);
+    doc.text('Size', colX.size, y);
+    y += 6;
+    doc.line(marginX, y, pageWidth-marginX, y);
+    y += 16;
+
+    doc.setFontSize(10);
+    doc.setTextColor(20,20,20);
+    doc.setFont('helvetica','normal');
+    wizLastReceipt.members.forEach((m,i)=>{
+      doc.text(String(i+1), colX.no, y);
+      doc.text(m.name || '-', colX.name, y);
+      doc.text(m.id || '-', colX.id, y);
+      doc.text(m.semester || '-', colX.sem, y);
+      doc.text(m.size || '-', colX.size, y);
+      y += 16;
+      doc.setFontSize(8.5);
+      doc.setTextColor(110,110,110);
+      doc.text(`${m.email || '-'}   |   ${m.mobile || '-'}`, colX.name, y);
+      doc.setFontSize(10);
+      doc.setTextColor(20,20,20);
+      y += 18;
+    });
+
+    y += 8;
+    doc.setDrawColor(220,220,220);
+    doc.line(marginX, y, pageWidth-marginX, y);
+    y += 26;
+
+    // Contact & payment
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    doc.text('Contact & Payment', marginX, y);
+    y += 20;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10.5);
+    const rows = [
+      ['Contact Person', wizLastReceipt.contact || '-'],
+      ['Payment Method', wizLastReceipt.payMethod || '-'],
+    ];
+    if(wizLastReceipt.payMethod && wizLastReceipt.payMethod !== 'Bank Transfer'){
+      rows.push([`Transaction ID`, wizLastReceipt.txnId || '-']);
+      rows.push([`Sender Mobile`, wizLastReceipt.txnPhone || '-']);
+    }
+    rows.forEach(([label,val])=>{
+      doc.setTextColor(120,120,120);
+      doc.text(label, marginX, y);
+      doc.setTextColor(20,20,20);
+      doc.text(String(val), marginX + 160, y);
+      y += 18;
+    });
+
+    y += 20;
+    doc.setDrawColor(230,230,230);
+    doc.line(marginX, y, pageWidth-marginX, y);
+    y += 20;
+    doc.setFontSize(9);
+    doc.setTextColor(140,140,140);
+    doc.text('Please bring this receipt (printed or digital) for on-site check-in.', marginX, y);
+    y += 14;
+    doc.text('VUPC · Dept. of Computer Science & Engineering, Varendra University', marginX, y);
+
+    doc.save(`${wizLastReceipt.id}_receipt.pdf`);
+  }
+
+  document.getElementById('downloadPdfBtn').addEventListener('click', downloadReceiptPdf);
+
+  document.getElementById('copyBtn').addEventListener('click', ()=>{
+    const id = document.getElementById('regIdText').textContent;
+    navigator.clipboard?.writeText(id);
+    const btn = document.getElementById('copyBtn');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+    setTimeout(()=>{ btn.innerHTML = original; }, 1200);
+  });
+
+  // ---- closing the success modal: hides it, resets the wizard for the next
+  // team, and returns the visitor to the top of the page ----
+  function closeSuccessModal(){
+    document.getElementById('successModal').classList.remove('show');
+    wiz = freshWizState();
+    renderWizard();
+    document.getElementById('home').scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth'});
+  }
+  document.getElementById('modalCloseBtn').addEventListener('click', closeSuccessModal);
+  document.getElementById('modalDoneBtn').addEventListener('click', closeSuccessModal);
+  document.getElementById('successModal').addEventListener('click', (e)=>{
+    if(e.target.id === 'successModal') closeSuccessModal();
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && document.getElementById('successModal').classList.contains('show')){
+      closeSuccessModal();
+    }
+  });
+
+  renderWizard();
 
   // ---- blog read more accordion ----
   document.querySelectorAll('.read-more-btn').forEach(btn => {

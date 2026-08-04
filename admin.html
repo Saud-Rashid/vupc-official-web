@@ -1,531 +1,1344 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Portal | VUPC Code Harbor</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#0a0714;
-    --surface:rgba(255,255,255,0.035);
-    --surface-hover:rgba(255,255,255,0.06);
-    --border:rgba(255,255,255,0.09);
-    --border-bright:rgba(255,255,255,0.18);
-    --text:#f5f3fa;
-    --text-dim:#9b93ae;
-    --text-faint:#6b6480;
-    --magenta:#e04fe0;
-    --violet:#7c5cf5;
-    --cyan:#22d3ee;
-    --amber:#fbbf24;
-    --green:#34d399;
-    --red:#fb7185;
-    --ink:#0d0e15;
-    --grad-primary: linear-gradient(135deg,var(--magenta),var(--violet));
-    --radius:20px;
-    --radius-sm:12px;
-    --radius-pill:999px;
-    --font-display:'Space Grotesk',sans-serif;
-    --font-body:'Inter',sans-serif;
-    --font-mono:'JetBrains Mono',monospace;
-    --nav-h:76px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:var(--font-body);
-    line-height:1.6;
-    min-height:100vh;
-    -webkit-font-smoothing:antialiased;
-  }
-  a{color:inherit;text-decoration:none;}
-  button{font:inherit;cursor:pointer;}
-  input{font:inherit;color:inherit;}
-  a:focus-visible, button:focus-visible, input:focus-visible{
-    outline:2px solid var(--cyan);
-    outline-offset:3px;
-    border-radius:6px;
-  }
-
-  .bg-layer{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
-  .bg-grid{
-    position:absolute;inset:0;
-    background-image:radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
-    background-size:30px 30px;opacity:.5;
-    mask-image:radial-gradient(ellipse 80% 60% at 50% 20%, #000 40%, transparent 90%);
-  }
-  .blob{position:absolute;border-radius:50%;filter:blur(90px);mix-blend-mode:screen;opacity:.5;}
-  .blob-1{width:480px;height:480px;background:var(--magenta);top:-140px;left:-120px;}
-  .blob-2{width:440px;height:440px;background:var(--violet);bottom:-160px;right:-100px;}
-
-  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
-
-  .nav{
-    position:fixed;top:0;left:0;right:0;z-index:50;height:var(--nav-h);
-    display:flex;align-items:center;
-    background:rgba(10,7,20,0.6);
-    backdrop-filter:blur(16px) saturate(140%);
-    border-bottom:1px solid var(--border);
-  }
-  .nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%;}
-  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-display);font-weight:700;font-size:1.15rem;}
-  .brand .dots{display:flex;gap:5px;}
-  .brand .dots span{width:9px;height:9px;border-radius:50%;display:block;}
-  .brand .dots span:nth-child(1){background:var(--red);}
-  .brand .dots span:nth-child(2){background:var(--amber);}
-  .brand .dots span:nth-child(3){background:var(--green);}
-  .brand small{display:block;font-family:var(--font-mono);font-weight:400;font-size:.7rem;color:var(--text-faint);margin-top:1px;}
-  .badge-tag{
-    font-family:var(--font-mono);font-size:.7rem;color:var(--amber);
-    border:1px solid rgba(251,191,36,0.35);background:rgba(251,191,36,0.08);
-    padding:.35rem .7rem;border-radius:var(--radius-pill);
-  }
-  .back-link{font-family:var(--font-mono);font-size:.8rem;color:var(--text-dim);display:flex;align-items:center;gap:.4rem;}
-  .back-link:hover{color:var(--cyan);}
-
-  main{position:relative;z-index:1;padding-top:var(--nav-h);}
-
-  /* ---- login view ---- */
-  .login-view{
-    min-height:calc(100vh - var(--nav-h));
-    display:flex;align-items:center;justify-content:center;
-    padding:2rem 20px;
-  }
-  .panel{
-    background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    backdrop-filter:blur(18px);
-    overflow:hidden;
-  }
-  .panel-head{
-    display:flex;align-items:center;gap:8px;padding:.85rem 1.3rem;
-    border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);
-  }
-  .panel-head span{width:10px;height:10px;border-radius:50%;}
-  .panel-head span:nth-child(1){background:var(--red);}
-  .panel-head span:nth-child(2){background:var(--amber);}
-  .panel-head span:nth-child(3){background:var(--green);}
-  .panel-head em{font-style:normal;font-family:var(--font-mono);font-size:.72rem;color:var(--text-faint);margin-left:.5rem;}
-
-  .login-card{width:100%;max-width:420px;}
-  .login-card .panel-body{padding:2.2rem 2rem 2.4rem;}
-  .login-card h1{
-    font-family:var(--font-display);font-size:1.5rem;font-weight:700;margin-bottom:.4rem;
-  }
-  .login-card p.sub{color:var(--text-dim);font-size:.9rem;margin-bottom:1.8rem;}
-
-  .field{margin-bottom:1.2rem;}
-  .field label{
-    display:block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.04em;
-    color:var(--text-faint);margin-bottom:.5rem;text-transform:uppercase;
-  }
-  .field input{
-    width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);
-    border-radius:var(--radius-sm);padding:.85rem 1rem;color:var(--text);
-    transition:border-color .2s ease, background .2s ease;
-  }
-  .field input::placeholder{color:var(--text-faint);}
-  .field input:focus{border-color:var(--cyan);background:rgba(255,255,255,0.05);}
-
-  .form-row-end{display:flex;justify-content:flex-end;margin-bottom:1.6rem;}
-  .link-btn{
-    font-family:var(--font-mono);font-size:.8rem;color:var(--cyan);background:none;border:none;
-  }
-  .link-btn:hover{text-decoration:underline;}
-
-  .btn{
-    display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
-    padding:.9rem 1.6rem;border-radius:var(--radius-pill);font-weight:700;
-    font-size:.95rem;border:none;transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;
-  }
-  .btn-primary{
-    background:var(--grad-primary);color:var(--ink);
-    box-shadow:0 8px 24px rgba(224,79,224,0.3);width:100%;
-  }
-  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(224,79,224,0.4);}
-  .btn-primary:disabled{opacity:.65;cursor:default;transform:none;}
-  .btn-outline{
-    border:1px solid var(--border-bright);color:var(--text);background:var(--surface);width:100%;
-  }
-  .btn-outline:hover{background:var(--surface-hover);border-color:var(--cyan);}
-
-  .spinner{
-    width:16px;height:16px;border-radius:50%;
-    border:2px solid rgba(13,14,21,0.35);border-top-color:var(--ink);
-    animation:spin .7s linear infinite;display:none;
-  }
-  .btn-primary.loading .spinner{display:inline-block;}
-  .btn-primary.loading .btn-label{opacity:.7;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-
-  .error-msg{
-    display:none;
-    font-family:var(--font-mono);font-size:.8rem;color:var(--red);
-    background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);
-    padding:.7rem .9rem;border-radius:var(--radius-sm);margin-bottom:1.2rem;
-  }
-  .error-msg.show{display:block;}
-
-  /* forgot password view */
-  .forgot-view{display:none;}
-  .forgot-view.show{display:block;}
-  .login-form-view.hide{display:none;}
-
-  .success-note{
-    display:none;text-align:center;padding:1rem 0 .4rem;
-  }
-  .success-note.show{display:block;}
-  .success-note .tick{
-    width:48px;height:48px;border-radius:50%;
-    background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.4);
-    display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--green);
-  }
-  .success-note h4{font-family:var(--font-display);font-size:1.1rem;margin-bottom:.4rem;}
-  .success-note p{color:var(--text-dim);font-size:.85rem;}
-
-  /* ---- dashboard view ---- */
-  .dash-view{display:none;padding:2.4rem 0 4rem;}
-  .dash-view.show{display:block;}
-  .dash-head{
-    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;
-  }
-  .dash-head h1{font-family:var(--font-display);font-size:1.7rem;font-weight:700;}
-  .dash-head p{color:var(--text-dim);font-size:.9rem;margin-top:.3rem;}
-  .dash-actions{display:flex;gap:.8rem;flex-wrap:wrap;}
-  .btn-sm{padding:.65rem 1.1rem;font-size:.82rem;width:auto;}
-
-  .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
-  .stat-card{
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
-    padding:1.1rem 1.2rem;
-  }
-  .stat-card b{
-    display:block;font-family:var(--font-mono);font-size:1.5rem;font-weight:700;
-    background:var(--grad-primary);-webkit-background-clip:text;background-clip:text;color:transparent;
-  }
-  .stat-card span{font-size:.78rem;color:var(--text-faint);}
-
-  .table-wrap{overflow-x:auto;border-radius:var(--radius);}
-  table{width:100%;border-collapse:collapse;min-width:820px;}
-  thead th{
-    text-align:left;font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;
-    letter-spacing:.05em;color:var(--text-faint);padding:.9rem 1rem;border-bottom:1px solid var(--border);
-    white-space:nowrap;
-  }
-  tbody td{
-    padding:.95rem 1rem;font-size:.86rem;border-bottom:1px solid var(--border);color:var(--text);
-    vertical-align:top;
-  }
-  tbody tr:hover{background:rgba(255,255,255,0.02);}
-  .cell-faint{color:var(--text-faint);font-size:.78rem;}
-  .verify-toggle{
-    display:inline-flex;align-items:center;gap:.4rem;
-    font-family:var(--font-mono);font-size:.72rem;padding:.35rem .7rem;
-    border-radius:var(--radius-pill);border:1px solid;cursor:pointer;
-  }
-  .verify-toggle.verified{color:var(--green);border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);}
-  .verify-toggle.pending{color:var(--amber);border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.08);}
-  .verify-toggle .vdot{width:6px;height:6px;border-radius:50%;background:currentColor;}
-
-  .logout-link{font-family:var(--font-mono);font-size:.8rem;color:var(--text-dim);}
-  .logout-link:hover{color:var(--red);}
-
-  @media (max-width:900px){
-    .stat-cards{grid-template-columns:repeat(2,1fr);}
-  }
-  @media (max-width:640px){
-    .wrap{padding:0 20px;}
-    .stat-cards{grid-template-columns:1fr 1fr;}
-  }
-</style>
-</head>
-<body>
-
-<div class="bg-layer" aria-hidden="true">
-  <div class="bg-grid"></div>
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-</div>
-
-<nav class="nav">
-  <div class="wrap">
-    <a href="index.html" class="brand">
-      <span class="dots"><span></span><span></span><span></span></span>
-      <span>VUPC<br><small>Code Harbor</small></span>
-    </a>
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <span class="badge-tag" id="modeTag">Admin Portal</span>
-      <a href="index.html" class="back-link">← Back to site</a>
-    </div>
-  </div>
-</nav>
-
-<main>
-
-  <!-- LOGIN VIEW -->
-  <div class="login-view" id="loginView">
-    <div class="panel login-card">
-      <div class="panel-head"><span></span><span></span><span></span><em>admin-auth.exe</em></div>
-      <div class="panel-body">
-
-        <div class="login-form-view" id="loginFormView">
-          <h1>Admin Sign In</h1>
-          <p class="sub">Restricted area — VUPC organizing committee only.</p>
-
-          <div class="error-msg" id="loginError">Invalid Admin Credentials.</div>
-
-          <form id="loginForm">
-            <div class="field">
-              <label for="adminId">Admin Email</label>
-              <input id="adminId" type="email" placeholder="admin@vupc.varendra.ac.bd" required>
-            </div>
-            <div class="field">
-              <label for="adminPass">Password</label>
-              <input id="adminPass" type="password" placeholder="••••••••" required>
-            </div>
-            <div class="form-row-end">
-              <button type="button" class="link-btn" id="forgotBtn">Forgot Password?</button>
-            </div>
-            <button type="submit" class="btn btn-primary" id="loginBtn">
-              <span class="spinner"></span>
-              <span class="btn-label">Log In</span>
-            </button>
-          </form>
-        </div>
-
-        <div class="forgot-view" id="forgotView">
-          <h1>Reset Password</h1>
-          <p class="sub">Enter your authorized administrator email — we'll send a reset link.</p>
-
-          <div id="forgotFormWrap">
-            <div class="field">
-              <label for="resetEmail">Administrator Email</label>
-              <input id="resetEmail" type="email" placeholder="admin@vupc.varendra.ac.bd" required>
-            </div>
-            <button type="button" class="btn btn-primary" id="sendResetBtn">
-              <span class="btn-label">Send Reset Link</span>
-            </button>
-          </div>
-
-          <div class="success-note" id="resetSuccess">
-            <div class="tick">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
-            </div>
-            <h4>Reset link sent</h4>
-            <p>If that email is registered as an admin, a reset link is on its way to your inbox.</p>
-          </div>
-
-          <button type="button" class="btn btn-outline" id="backToLoginBtn" style="margin-top:1.2rem;">← Back to Log In</button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- DASHBOARD VIEW -->
-  <div class="dash-view wrap" id="dashView">
-    <div class="dash-head">
-      <div>
-        <h1>Team Registrations</h1>
-        <p>Code Harbor 2026 · Season 5 — live registration data</p>
-      </div>
-      <div class="dash-actions">
-        <button class="btn btn-outline btn-sm" id="exportCsvBtn">⬇ Export CSV</button>
-        <a href="#" class="logout-link" id="logoutBtn">Log out</a>
-      </div>
-    </div>
-
-    <div class="stat-cards">
-      <div class="stat-card"><b id="statTotalTeams">0</b><span>Teams Registered</span></div>
-      <div class="stat-card"><b id="statVerified">0</b><span>Verified Payments</span></div>
-      <div class="stat-card"><b id="statPending">0</b><span>Pending Verification</span></div>
-      <div class="stat-card"><b id="statTotalMembers">0</b><span>Total Participants</span></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><span></span><span></span><span></span><em>teams.csv</em></div>
-      <div class="table-wrap">
-        <table id="teamsTable">
-          <thead>
-            <tr>
-              <th>Team Name</th>
-              <th>Contact Email</th>
-              <th>Members</th>
-              <th>Payment Gateway</th>
-              <th>Transaction ID</th>
-              <th>Verification</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Dynamic Rows -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-</main>
-
-<script>
-  const API_BASE = '/api/admin';
-  let loadedTeams = [];
-
-  const loginView = document.getElementById('loginView');
-  const dashView = document.getElementById('dashView');
-  const loginForm = document.getElementById('loginForm');
-  const loginBtn = document.getElementById('loginBtn');
-  const loginError = document.getElementById('loginError');
-  const modeTag = document.getElementById('modeTag');
-  const tbody = document.querySelector('#teamsTable tbody');
-
-  // Session Handler
-  const token = localStorage.getItem('vupc_admin_token');
-  if (token) {
-    showDashboard();
-  }
-
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('adminId').value;
-    const password = document.getElementById('adminPass').value;
-
-    loginError.classList.remove('show');
-    loginBtn.classList.add('loading');
-    loginBtn.disabled = true;
-
-    try {
-      const res = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      localStorage.setItem('vupc_admin_token', data.token);
-      showDashboard();
-    } catch (err) {
-      loginError.innerText = err.message || 'Login failed';
-      loginError.classList.add('show');
-    } finally {
-      loginBtn.classList.remove('loading');
-      loginBtn.disabled = false;
-    }
-  });
-
-  function showDashboard() {
-    loginView.style.display = 'none';
-    dashView.classList.add('show');
-    modeTag.textContent = 'Dashboard';
-    fetchTeamsData();
-  }
-
-  async function fetchTeamsData() {
-    try {
-      const token = localStorage.getItem('vupc_admin_token');
-      const res = await fetch(`${API_BASE}/teams`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.status === 401 || res.status === 403) {
-        logout();
-        return;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Portal | VUPC Code Harbor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0a0714;
+        --surface: rgba(255, 255, 255, 0.035);
+        --surface-hover: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.09);
+        --border-bright: rgba(255, 255, 255, 0.18);
+        --text: #f5f3fa;
+        --text-dim: #9b93ae;
+        --text-faint: #6b6480;
+        --magenta: #e04fe0;
+        --violet: #7c5cf5;
+        --cyan: #22d3ee;
+        --amber: #fbbf24;
+        --green: #34d399;
+        --red: #fb7185;
+        --ink: #0d0e15;
+        --grad-primary: linear-gradient(135deg, var(--magenta), var(--violet));
+        --radius: 20px;
+        --radius-sm: 12px;
+        --radius-pill: 999px;
+        --font-display: "Space Grotesk", sans-serif;
+        --font-body: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+        --nav-h: 76px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        line-height: 1.6;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 3px;
+        border-radius: 6px;
       }
 
-      loadedTeams = await res.json();
-      
-      const verified = loadedTeams.filter(t => t.verified).length;
-      document.getElementById('statTotalTeams').innerText = loadedTeams.length;
-      document.getElementById('statVerified').innerText = verified;
-      document.getElementById('statPending').innerText = loadedTeams.length - verified;
-      document.getElementById('statTotalMembers').innerText = loadedTeams.length * 3;
+      .bg-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(
+          rgba(255, 255, 255, 0.045) 1px,
+          transparent 1px
+        );
+        background-size: 30px 30px;
+        opacity: 0.5;
+        mask-image: radial-gradient(
+          ellipse 80% 60% at 50% 20%,
+          #000 40%,
+          transparent 90%
+        );
+      }
+      .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        mix-blend-mode: screen;
+        opacity: 0.5;
+      }
+      .blob-1 {
+        width: 480px;
+        height: 480px;
+        background: var(--magenta);
+        top: -140px;
+        left: -120px;
+      }
+      .blob-2 {
+        width: 440px;
+        height: 440px;
+        background: var(--violet);
+        bottom: -160px;
+        right: -100px;
+      }
 
-      renderTable(loadedTeams);
-    } catch (err) {
-      console.error(err);
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 32px;
+      }
+
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        height: var(--nav-h);
+        display: flex;
+        align-items: center;
+        background: rgba(10, 7, 20, 0.6);
+        backdrop-filter: blur(16px) saturate(140%);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.15rem;
+      }
+      .brand .dots {
+        display: flex;
+        gap: 5px;
+      }
+      .brand .dots span {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        display: block;
+      }
+      .brand .dots span:nth-child(1) {
+        background: var(--red);
+      }
+      .brand .dots span:nth-child(2) {
+        background: var(--amber);
+      }
+      .brand .dots span:nth-child(3) {
+        background: var(--green);
+      }
+      .brand small {
+        display: block;
+        font-family: var(--font-mono);
+        font-weight: 400;
+        font-size: 0.7rem;
+        color: var(--text-faint);
+        margin-top: 1px;
+      }
+      .badge-tag {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--amber);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        background: rgba(251, 191, 36, 0.08);
+        padding: 0.35rem 0.7rem;
+        border-radius: var(--radius-pill);
+      }
+      .back-link {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .back-link:hover {
+        color: var(--cyan);
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        padding-top: var(--nav-h);
+      }
+
+      /* ---- login view ---- */
+      .login-view {
+        min-height: calc(100vh - var(--nav-h));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 20px;
+      }
+      .panel {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.045),
+          rgba(255, 255, 255, 0.015)
+        );
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        backdrop-filter: blur(18px);
+        overflow: hidden;
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.85rem 1.3rem;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .panel-head span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .panel-head span:nth-child(1) {
+        background: var(--red);
+      }
+      .panel-head span:nth-child(2) {
+        background: var(--amber);
+      }
+      .panel-head span:nth-child(3) {
+        background: var(--green);
+      }
+      .panel-head em {
+        font-style: normal;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-faint);
+        margin-left: 0.5rem;
+      }
+
+      .login-card {
+        width: 100%;
+        max-width: 420px;
+      }
+      .login-card .panel-body {
+        padding: 2.2rem 2rem 2.4rem;
+      }
+      .login-card h1 {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+      }
+      .login-card p.sub {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        margin-bottom: 1.8rem;
+      }
+
+      .field {
+        margin-bottom: 1.2rem;
+      }
+      .field label {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        color: var(--text-faint);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+      }
+      .field input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.85rem 1rem;
+        color: var(--text);
+        transition:
+          border-color 0.2s ease,
+          background 0.2s ease;
+      }
+      .field input::placeholder {
+        color: var(--text-faint);
+      }
+      .field input:focus {
+        border-color: var(--cyan);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .form-row-end {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 1.6rem;
+      }
+      .link-btn {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--cyan);
+      }
+      .link-btn:hover {
+        text-decoration: underline;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        padding: 0.9rem 1.6rem;
+        border-radius: var(--radius-pill);
+        font-weight: 700;
+        font-size: 0.95rem;
+        border: none;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease,
+          opacity 0.2s ease;
+      }
+      .btn-primary {
+        background: var(--grad-primary);
+        color: var(--ink);
+        box-shadow: 0 8px 24px rgba(224, 79, 224, 0.3);
+        width: 100%;
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(224, 79, 224, 0.4);
+      }
+      .btn-primary:disabled {
+        opacity: 0.65;
+        cursor: default;
+        transform: none;
+      }
+      .btn-outline {
+        border: 1px solid var(--border-bright);
+        color: var(--text);
+        background: var(--surface);
+        width: 100%;
+      }
+      .btn-outline:hover {
+        background: var(--surface-hover);
+        border-color: var(--cyan);
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid rgba(13, 14, 21, 0.35);
+        border-top-color: var(--ink);
+        animation: spin 0.7s linear infinite;
+        display: none;
+      }
+      .btn-primary.loading .spinner {
+        display: inline-block;
+      }
+      .btn-primary.loading .btn-label {
+        opacity: 0.7;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error-msg {
+        display: none;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--red);
+        background: rgba(251, 113, 133, 0.1);
+        border: 1px solid rgba(251, 113, 133, 0.3);
+        padding: 0.7rem 0.9rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1.2rem;
+      }
+      .error-msg.show {
+        display: block;
+      }
+
+      .hint-note {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-faint);
+        margin-top: 1.6rem;
+        text-align: center;
+      }
+
+      /* forgot password view */
+      .forgot-view {
+        display: none;
+      }
+      .forgot-view.show {
+        display: block;
+      }
+      .login-form-view.hide {
+        display: none;
+      }
+
+      .success-note {
+        display: none;
+        text-align: center;
+        padding: 1rem 0 0.4rem;
+      }
+      .success-note.show {
+        display: block;
+      }
+      .success-note .tick {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(52, 211, 153, 0.12);
+        border: 1px solid rgba(52, 211, 153, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: var(--green);
+      }
+      .success-note h4 {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        margin-bottom: 0.4rem;
+      }
+      .success-note p {
+        color: var(--text-dim);
+        font-size: 0.85rem;
+      }
+
+      /* ---- dashboard view ---- */
+      .dash-view {
+        display: none;
+        padding: 2.4rem 0 4rem;
+      }
+      .dash-view.show {
+        display: block;
+      }
+      .dash-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .dash-head h1 {
+        font-family: var(--font-display);
+        font-size: 1.7rem;
+        font-weight: 700;
+      }
+      .dash-head p {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        margin-top: 0.3rem;
+      }
+      .dash-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+      .btn-sm {
+        padding: 0.65rem 1.1rem;
+        font-size: 0.82rem;
+        width: auto;
+      }
+
+      .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1.1rem 1.2rem;
+      }
+      .stat-card b {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: var(--grad-primary);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .stat-card span {
+        font-size: 0.78rem;
+        color: var(--text-faint);
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border-radius: var(--radius);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 820px;
+      }
+      thead th {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-faint);
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      tbody td {
+        padding: 0.95rem 1rem;
+        font-size: 0.86rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        vertical-align: top;
+      }
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .cell-faint {
+        color: var(--text-faint);
+        font-size: 0.78rem;
+      }
+      .verify-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: var(--radius-pill);
+        border: 1px solid;
+        cursor: pointer;
+      }
+      .verify-toggle.verified {
+        color: var(--green);
+        border-color: rgba(52, 211, 153, 0.4);
+        background: rgba(52, 211, 153, 0.08);
+      }
+      .verify-toggle.pending {
+        color: var(--amber);
+        border-color: rgba(251, 191, 36, 0.4);
+        background: rgba(251, 191, 36, 0.08);
+      }
+      .verify-toggle .vdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .logout-link {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-dim);
+      }
+      .logout-link:hover {
+        color: var(--red);
+      }
+
+      /* ---- search bar ---- */
+      .search-row {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 1rem 1.1rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .search-box {
+        position: relative;
+        flex: 1 1 260px;
+        min-width: 220px;
+      }
+      .search-box svg {
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-faint);
+        pointer-events: none;
+      }
+      .search-box input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-pill);
+        padding: 0.7rem 1rem 0.7rem 2.5rem;
+        color: var(--text);
+        font-size: 0.85rem;
+        transition:
+          border-color 0.2s ease,
+          background 0.2s ease;
+      }
+      .search-box input::placeholder {
+        color: var(--text-faint);
+      }
+      .search-box input:focus {
+        border-color: var(--cyan);
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .search-count {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-faint);
+        white-space: nowrap;
+      }
+      .no-results td {
+        text-align: center;
+        color: var(--text-faint);
+        padding: 2.4rem 1rem;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+      }
+      .view-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--border-bright);
+        background: var(--surface);
+        color: var(--text);
+      }
+      .view-btn:hover {
+        border-color: var(--cyan);
+        color: var(--cyan);
+        background: var(--surface-hover);
+      }
+
+      /* ---- team detail modal ---- */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(6, 5, 12, 0.72);
+        backdrop-filter: blur(6px);
+        align-items: flex-start;
+        justify-content: center;
+        padding: 6vh 20px;
+        overflow-y: auto;
+      }
+      .modal-overlay.show {
+        display: flex;
+      }
+      .modal-card {
+        width: 100%;
+        max-width: 620px;
+      }
+      .modal-close {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: var(--text-faint);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        line-height: 1;
+        padding: 0.2rem 0.4rem;
+        border-radius: 6px;
+      }
+      .modal-close:hover {
+        color: var(--red);
+      }
+      .modal-body {
+        padding: 1.6rem 1.8rem 1.9rem;
+      }
+      .modal-body h2 {
+        font-family: var(--font-display);
+        font-size: 1.35rem;
+        margin-bottom: 0.2rem;
+      }
+      .modal-sub {
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        margin-bottom: 1.4rem;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.9rem 1.2rem;
+        margin-bottom: 1.6rem;
+      }
+      .detail-item label {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-faint);
+        margin-bottom: 0.3rem;
+      }
+      .detail-item div {
+        font-size: 0.88rem;
+        color: var(--text);
+        word-break: break-word;
+      }
+      .modal-section-title {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-faint);
+        margin-bottom: 0.7rem;
+      }
+      .member-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.7rem;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .member-card:last-child {
+        margin-bottom: 0;
+      }
+      .member-card .m-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.35rem;
+      }
+      .member-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.2rem;
+        font-size: 0.78rem;
+        color: var(--text-dim);
+      }
+      .member-meta span b {
+        color: var(--text-faint);
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        margin-right: 0.3rem;
+      }
+      .tshirt-pill {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: var(--radius-pill);
+        border: 1px solid rgba(124, 92, 245, 0.4);
+        background: rgba(124, 92, 245, 0.1);
+        color: var(--violet);
+      }
+
+      @media (max-width: 900px) {
+        .stat-cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 640px) {
+        .wrap {
+          padding: 0 20px;
+        }
+        .stat-cards {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-layer" aria-hidden="true">
+      <div class="bg-grid"></div>
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+    </div>
+
+    <nav class="nav">
+      <div class="wrap">
+        <a href="index.html" class="brand">
+          <span class="dots"><span></span><span></span><span></span></span>
+          <span>VUPC<br /><small>Code Harbor</small></span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 1rem">
+          <span class="badge-tag" id="modeTag">Admin Portal</span>
+          <a href="index.html" class="back-link">← Back to site</a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <!-- LOGIN VIEW -->
+      <div class="login-view" id="loginView">
+        <div class="panel login-card">
+          <div class="panel-head">
+            <span></span><span></span><span></span><em>admin-auth.exe</em>
+          </div>
+          <div class="panel-body">
+            <div class="login-form-view" id="loginFormView">
+              <h1>Admin Sign In</h1>
+              <p class="sub">
+                Restricted area — VUPC organizing committee only.
+              </p>
+
+              <div class="error-msg" id="loginError">
+                Invalid Admin ID / Email or Password.
+              </div>
+
+              <form id="loginForm">
+                <div class="field">
+                  <label for="adminId">Admin ID / Email</label>
+                  <input
+                    id="adminId"
+                    type="text"
+                    placeholder="admin@vupc.varendra.ac.bd"
+                    required
+                  />
+                </div>
+                <div class="field">
+                  <label for="adminPass">Password</label>
+                  <input
+                    id="adminPass"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <div class="form-row-end">
+                  <button type="button" class="link-btn" id="forgotBtn">
+                    Forgot Password?
+                  </button>
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                  <span class="spinner"></span>
+                  <span class="btn-label">Log In</span>
+                </button>
+              </form>
+
+              <p class="hint-note">
+                This is a front-end preview. Connect to your backend to
+                authenticate real admins.
+              </p>
+            </div>
+
+            <div class="forgot-view" id="forgotView">
+              <h1>Reset Password</h1>
+              <p class="sub">
+                Enter your authorized administrator email — we'll send a reset
+                link.
+              </p>
+
+              <div id="forgotFormWrap">
+                <div class="field">
+                  <label for="resetEmail">Administrator Email</label>
+                  <input
+                    id="resetEmail"
+                    type="email"
+                    placeholder="admin@vupc.varendra.ac.bd"
+                    required
+                  />
+                </div>
+                <button type="button" class="btn btn-primary" id="sendResetBtn">
+                  <span class="btn-label">Send Reset Link</span>
+                </button>
+              </div>
+
+              <div class="success-note" id="resetSuccess">
+                <div class="tick">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12.5l4.5 4.5L19 7" />
+                  </svg>
+                </div>
+                <h4>Reset link sent</h4>
+                <p>
+                  If that email is registered as an admin, a reset link is on
+                  its way.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-outline"
+                id="backToLoginBtn"
+                style="margin-top: 1.2rem"
+              >
+                ← Back to Log In
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DASHBOARD VIEW -->
+      <div class="dash-view wrap" id="dashView">
+        <div class="dash-head">
+          <div>
+            <h1>Team Registrations</h1>
+            <p>Code Harbor 2026 · Season 5 — live registration data</p>
+          </div>
+          <div class="dash-actions">
+            <button class="btn btn-outline btn-sm" id="exportCsvBtn">
+              ⬇ Export CSV
+            </button>
+            <a href="#" class="logout-link" id="logoutBtn">Log out</a>
+          </div>
+        </div>
+
+        <div class="stat-cards">
+          <div class="stat-card"><b>128</b><span>Teams Registered</span></div>
+          <div class="stat-card"><b>96</b><span>Verified Payments</span></div>
+          <div class="stat-card">
+            <b>32</b><span>Pending Verification</span>
+          </div>
+          <div class="stat-card"><b>384</b><span>Total Participants</span></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <span></span><span></span><span></span><em>teams.csv</em>
+          </div>
+
+          <div class="search-row">
+            <div class="search-box">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+              <input
+                type="text"
+                id="teamSearch"
+                placeholder="Search by team name, member, email or phone…"
+                autocomplete="off"
+              />
+            </div>
+            <span class="search-count" id="searchCount"></span>
+          </div>
+
+          <div class="table-wrap">
+            <table id="teamsTable">
+              <thead>
+                <tr>
+                  <th>Team Name</th>
+                  <th>Contact Email</th>
+                  <th>Members</th>
+                  <th>Payment Gateway</th>
+                  <th>Transaction ID</th>
+                  <th>Verification</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <p class="hint-note" style="text-align: left; margin-top: 1.2rem">
+          Sample data shown for preview purposes. Wire this table up to your
+          registration database for live results.
+        </p>
+      </div>
+
+      <!-- TEAM DETAIL MODAL -->
+      <div class="modal-overlay" id="teamModal">
+        <div class="panel modal-card">
+          <div class="panel-head">
+            <span></span><span></span><span></span
+            ><em>team-detail.json</em>
+            <button
+              type="button"
+              class="modal-close"
+              id="modalCloseBtn"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="modal-body" id="modalBody">
+            <!-- injected by JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const API_BASE = '/api/admin';
+      // ---------- sample dashboard data (placeholder) ----------
+      // Wire this up to your backend: fetch registrations from your API/DB
+      // and map each record into this same shape.
+      let teams = [];
+
+async function fetchLiveTeams() {
+  try {
+    const res = await fetch(`${API_BASE}/teams`);
+    if (res.ok) {
+      teams = await res.json();
+      renderTeams();
     }
+  } catch (err) {
+    console.error("Error fetching teams:", err);
   }
+}
 
-  function renderTable(teams) {
-    if (teams.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">No registration data found.</td></tr>`;
-      return;
-    }
+      // Build a lowercase haystack per team so search matches team name,
+      // institution, contact info, or any member's name/email/phone.
+      function teamMatches(t, q) {
+        if (!q) return true;
+        const haystack = [
+          t.name,
+          t.institution,
+          t.email,
+          t.phone,
+          t.trx,
+          t.gateway,
+          ...t.members.map((m) => `${m.name} ${m.email} ${m.phone}`),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
+      }
 
-    tbody.innerHTML = teams.map(t => `
+      function memberSummary(members) {
+        return members.map((m) => m.name).join(", ");
+      }
+
+      function renderTeams() {
+        const q = searchInput.value.trim().toLowerCase();
+        const filtered = teams
+          .map((t, i) => ({ t, i }))
+          .filter(({ t }) => teamMatches(t, q));
+
+        searchCount.textContent = q
+          ? `${filtered.length} of ${teams.length} teams`
+          : `${teams.length} teams`;
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr class="no-results"><td colspan="7">No teams match "${q}".</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = filtered
+          .map(
+            ({ t, i }) => `
       <tr>
-        <td><strong>${t.teamName || 'N/A'}</strong></td>
-        <td class="cell-faint">${t.teamEmail || 'N/A'}</td>
-        <td class="cell-faint">${t.m1_name || ''}, ${t.m2_name || ''}, ${t.m3_name || ''}</td>
-        <td>${t.paymentGateway || 'N/A'}</td>
-        <td class="cell-faint">${t.trxId || 'N/A'}</td>
+        <td><strong>${t.name}</strong></td>
+        <td class="cell-faint">${t.email}</td>
+        <td class="cell-faint">${memberSummary(t.members)}</td>
+        <td>${t.gateway}</td>
+        <td class="cell-faint">${t.trx}</td>
         <td>
-          <button class="verify-toggle ${t.verified ? 'verified' : 'pending'}" onclick="toggleStatus('${t.id}', ${t.verified})">
-            <span class="vdot"></span> ${t.verified ? 'Verified' : 'Pending'}
+          <button class="verify-toggle ${t.verified ? "verified" : "pending"}" data-idx="${i}">
+            <span class="vdot"></span> ${t.verified ? "Verified" : "Pending"}
           </button>
         </td>
+        <td>
+          <button class="view-btn" data-idx="${i}" data-action="view">View</button>
+        </td>
       </tr>
-    `).join('');
-  }
+    `,
+          )
+          .join("");
 
-  async function toggleStatus(id, currentStatus) {
-    const token = localStorage.getItem('vupc_admin_token');
-    await fetch(`${API_BASE}/teams/${id}/verify`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ verified: !currentStatus })
+        tbody.querySelectorAll(".verify-toggle").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const idx = +btn.dataset.idx;
+            teams[idx].verified = !teams[idx].verified;
+            renderTeams();
+          });
+        });
+
+        tbody.querySelectorAll('[data-action="view"]').forEach((btn) => {
+          btn.addEventListener("click", () => {
+            openTeamModal(+btn.dataset.idx);
+          });
+        });
+      }
+      renderTeams();
+
+      searchInput.addEventListener("input", renderTeams);
+
+      // ---------- team detail modal ----------
+      const teamModal = document.getElementById("teamModal");
+      const modalBody = document.getElementById("modalBody");
+
+      function openTeamModal(idx) {
+        const t = teams[idx];
+        modalBody.innerHTML = `
+          <h2>${t.name}</h2>
+          <p class="modal-sub">${t.institution || "—"}</p>
+
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Contact Email</label>
+              <div>${t.email}</div>
+            </div>
+            <div class="detail-item">
+              <label>Contact Phone</label>
+              <div>${t.phone || "—"}</div>
+            </div>
+            <div class="detail-item">
+              <label>Payment Gateway</label>
+              <div>${t.gateway}</div>
+            </div>
+            <div class="detail-item">
+              <label>Transaction ID</label>
+              <div>${t.trx}</div>
+            </div>
+            <div class="detail-item">
+              <label>Verification</label>
+              <div>
+                <button class="verify-toggle ${t.verified ? "verified" : "pending"}" data-idx="${idx}" data-action="toggle-modal">
+                  <span class="vdot"></span> ${t.verified ? "Verified" : "Pending"}
+                </button>
+              </div>
+            </div>
+            <div class="detail-item">
+              <label>Team Size</label>
+              <div>${t.members.length} member${t.members.length === 1 ? "" : "s"}</div>
+            </div>
+          </div>
+
+          <div class="modal-section-title">Members</div>
+          ${t.members
+            .map(
+              (m) => `
+            <div class="member-card">
+              <div class="m-name">${m.name}</div>
+              <div class="member-meta">
+                <span><b>Email</b>${m.email}</span>
+                <span><b>Phone</b>${m.phone}</span>
+                <span><b>T-Shirt</b> <span class="tshirt-pill">${m.tshirt}</span></span>
+              </div>
+            </div>
+          `,
+            )
+            .join("")}
+        `;
+
+        modalBody
+          .querySelector('[data-action="toggle-modal"]')
+          .addEventListener("click", (e) => {
+            const btnIdx = +e.currentTarget.dataset.idx;
+            teams[btnIdx].verified = !teams[btnIdx].verified;
+            renderTeams();
+            openTeamModal(btnIdx);
+          });
+
+        teamModal.classList.add("show");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeTeamModal() {
+        teamModal.classList.remove("show");
+        document.body.style.overflow = "";
+      }
+
+      document
+        .getElementById("modalCloseBtn")
+        .addEventListener("click", closeTeamModal);
+      teamModal.addEventListener("click", (e) => {
+        if (e.target === teamModal) closeTeamModal();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && teamModal.classList.contains("show")) {
+          closeTeamModal();
+        }
+      });
+
+      // ---------- CSV export ----------
+      document.getElementById("exportCsvBtn").addEventListener("click", () => {
+        const header = [
+          "Team Name",
+          "Institution",
+          "Contact Email",
+          "Contact Phone",
+          "Payment Gateway",
+          "Transaction ID",
+          "Verified",
+          "Member Name",
+          "Member Email",
+          "Member Phone",
+          "T-Shirt Size",
+        ];
+        const rows = [];
+        teams.forEach((t) => {
+          t.members.forEach((m) => {
+            rows.push([
+              t.name,
+              t.institution || "",
+              t.email,
+              t.phone || "",
+              t.gateway,
+              t.trx,
+              t.verified ? "Yes" : "No",
+              m.name,
+              m.email,
+              m.phone,
+              m.tshirt,
+            ]);
+          });
+        });
+        const esc = (v) => `"${String(v).replace(/"/g, '""')}"`;
+        const csv = [header.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join(
+          "\n",
+        );
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "code-harbor-2026-teams.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // ---------- login flow (front-end preview only) ----------
+      const loginView = document.getElementById("loginView");
+      const dashView = document.getElementById("dashView");
+      const loginForm = document.getElementById("loginForm");
+      const loginBtn = document.getElementById("loginBtn");
+      const loginError = document.getElementById("loginError");
+      const modeTag = document.getElementById("modeTag");
+
+      loginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  loginError.classList.remove("show");
+  loginBtn.classList.add("loading");
+  loginBtn.disabled = true;
+
+  // simulated auth call
+  setTimeout(() => {
+    loginBtn.classList.remove("loading");
+    loginBtn.disabled = false;
+    // Front-end preview: any non-empty credentials succeed.
+    loginView.style.display = "none";
+    dashView.classList.add("show");
+    modeTag.textContent = "Dashboard";
+  }, 900);
+});
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  loginError.classList.remove("show");
+  loginBtn.classList.add("loading");
+  loginBtn.disabled = true;
+
+  const email = document.getElementById("adminId").value;
+  const password = document.getElementById("adminPass").value;
+
+  try {
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
     });
-    fetchTeamsData();
-  }
-
-  function logout() {
-    localStorage.removeItem('vupc_admin_token');
-    dashView.classList.remove('show');
-    loginView.style.display = 'flex';
-    modeTag.textContent = 'Admin Portal';
-  }
-
-  document.getElementById('logoutBtn').addEventListener('click', (e) => {
-    e.preventDefault();
-    logout();
-  });
-
-  // Export CSV
-  document.getElementById('exportCsvBtn').addEventListener('click', () => {
-    if(loadedTeams.length === 0) return alert('No data to export!');
     
-    const header = ['Team Name','Contact Email','Leader Name','Member 2','Member 3','Payment Gateway','Transaction ID','Verified'];
-    const rows = loadedTeams.map(t => [
-      `"${t.teamName || ''}"`,
-      `"${t.teamEmail || ''}"`,
-      `"${t.m1_name || ''}"`,
-      `"${t.m2_name || ''}"`,
-      `"${t.m3_name || ''}"`,
-      `"${t.paymentGateway || ''}"`,
-      `"${t.trxId || ''}"`,
-      t.verified ? 'Yes' : 'No'
-    ]);
-    
-    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], {type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'code-harbor-2026-teams.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
-</script>
+    const data = await res.json();
 
-</body>
+    if (res.ok && data.success) {
+      if (data.token) localStorage.setItem('vupc_admin_token', data.token);
+      loginView.style.display = "none";
+      dashView.classList.add("show");
+      modeTag.textContent = "Dashboard";
+      fetchLiveTeams();
+    } else {
+      loginError.textContent = data.message || "Invalid Email or Password";
+      loginError.classList.add("show");
+    }
+  } catch (err) {
+    loginError.textContent = "Failed to connect to backend server";
+    loginError.classList.add("show");
+  } finally {
+    loginBtn.classList.remove("loading");
+    loginBtn.disabled = false;
+  }
+});
+
+      document.getElementById("logoutBtn").addEventListener("click", (e) => {
+        e.preventDefault();
+        dashView.classList.remove("show");
+        loginView.style.display = "flex";
+        modeTag.textContent = "Admin Portal";
+        loginForm.reset();
+      });
+
+      // ---------- forgot password flow ----------
+      const loginFormView = document.getElementById("loginFormView");
+      const forgotView = document.getElementById("forgotView");
+      const forgotFormWrap = document.getElementById("forgotFormWrap");
+      const resetSuccess = document.getElementById("resetSuccess");
+
+      document.getElementById("forgotBtn").addEventListener("click", () => {
+        loginFormView.classList.add("hide");
+        forgotView.classList.add("show");
+      });
+      document
+        .getElementById("backToLoginBtn")
+        .addEventListener("click", () => {
+          forgotView.classList.remove("show");
+          loginFormView.classList.remove("hide");
+          forgotFormWrap.style.display = "";
+          resetSuccess.classList.remove("show");
+          document.getElementById("resetEmail").value = "";
+        });
+      document.getElementById("sendResetBtn").addEventListener("click", () => {
+        const email = document.getElementById("resetEmail").value.trim();
+        if (!email) return;
+        forgotFormWrap.style.display = "none";
+        resetSuccess.classList.add("show");
+      });
+      // Check auto-login on load
+const token = localStorage.getItem('vupc_admin_token');
+if (token) {
+  loginView.style.display = "none";
+  dashView.classList.add("show");
+  modeTag.textContent = "Dashboard";
+  fetchLiveTeams();
+}
+    </script>
+  </body>
 </html>
