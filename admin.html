@@ -1009,6 +1009,7 @@
       const FIREBASE_DB_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
       let teams = [];
 
+      // ১. ফায়ারবেস থেকে ডাটা লোড করার ফাংশন
       async function fetchLiveTeams() {
         try {
           const res = await fetch(FIREBASE_DB_URL);
@@ -1016,7 +1017,6 @@
             const data = await res.json();
             
             if (data) {
-              // Firebase Object কে Array-তে সঠিক উপায়ে কনভার্ট করা হচ্ছে
               if (Array.isArray(data)) {
                 teams = data.filter(item => item !== null);
               } else if (typeof data === 'object') {
@@ -1028,48 +1028,48 @@
             } else {
               teams = [];
             }
-            renderTeams();
-          } else {
-            console.error("Firebase error status:", res.status);
+            renderDashboard();
           }
         } catch (err) {
-          console.error("Error fetching teams from Firebase:", err);
+          console.error("Firebase fetch error:", err);
         }
       }
 
-      function renderTeams() {
-        const tbody = document.querySelector("#teamsTable tbody");
+      // ২. ড্যাশবোর্ডের কাউন্টার ও টেবিল আপডেট
+      function renderDashboard() {
+        // ১. উপরের ৪টি কার্ড ক্লাসের মাধ্যমে খুঁজে অটো-আপডেট করা
+        const statBoxes = document.querySelectorAll('.dash-view .panel-head b, .stat-box b, div[class*="card"] b, .dash-view b');
         
-        // স্ট্যাটাস সংখ্যা আপডেট
-        const st1 = document.getElementById("st1");
-        const st2 = document.getElementById("st2");
-        const st3 = document.getElementById("st3");
-        const st4 = document.getElementById("st4");
-
         const totalTeams = teams.length;
-        const verifiedCount = teams.filter(t => t.status === 'Active' || t.verified).length;
+        const verifiedCount = teams.filter(t => t.status === 'Active' || t.status === 'Verified' || t.verified).length;
         const pendingCount = totalTeams - verifiedCount;
         const totalParticipants = totalTeams * 3;
 
-        if (st1) st1.textContent = totalTeams;
-        if (st2) st2.textContent = verifiedCount;
-        if (st3) st3.textContent = pendingCount;
-        if (st4) st4.textContent = totalParticipants;
+        // কার্ডে যদি b ট্যাগ বা h2/h3 দিয়ে সংখ্যা থাকে, তা ডাইনামিকলি সেট করা
+        const allStatNumbers = Array.from(document.querySelectorAll('b, h2, h3')).filter(el => /^\d+$/.test(el.textContent.trim()));
+        if (allStatNumbers.length >= 4) {
+          allStatNumbers[0].textContent = totalTeams;
+          allStatNumbers[1].textContent = verifiedCount;
+          allStatNumbers[2].textContent = pendingCount;
+          allStatNumbers[3].textContent = totalParticipants;
+        }
 
+        // ২. টেবিল রেন্ডার করা (হুবহু ফায়ারবেসের ডাটা দেখাবে)
+        const tbody = document.querySelector("#teamsTable tbody") || document.querySelector("tbody");
         if (!tbody) return;
 
         if (teams.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">No teams found in database.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">No teams registered in Firebase yet.</td></tr>`;
           return;
         }
 
         tbody.innerHTML = teams.map((t) => `
           <tr>
-            <td><strong>${t.name || t.title || 'Code Ninjas'}</strong></td>
-            <td>${t.email || 'admin@vupc.ac.bd'}</td>
-            <td>${t.description || 'Registered Team'}</td>
-            <td>${t.gateway || 'bKash'}</td>
-            <td>${t.trx || 'TRX123456'}</td>
+            <td><strong>${t.name || t.teamName || 'Code Ninjas'}</strong></td>
+            <td>${t.email || t.contactEmail || 'admin@vupc.ac.bd'}</td>
+            <td>${t.members || t.description || 'Registered Team'}</td>
+            <td>${t.gateway || t.paymentGateway || 'bKash'}</td>
+            <td>${t.trx || t.transactionId || 'TRX123456'}</td>
             <td>
               <span class="verify-toggle ${t.status === 'Active' ? 'verified' : 'pending'}">
                 ${t.status || 'Active'}
@@ -1079,7 +1079,12 @@
         `).join("");
       }
 
-      // ফর্ম সাবমিট ও ড্যাশবোর্ড ওপেন
+      // ৩. পেজ লোড বা লগইন এর সাথে সাথে অটো রান
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchLiveTeams();
+      });
+
+      // ৪. ফর্ম সাবমিট
       const loginForm = document.getElementById("loginForm");
       if (loginForm) {
         loginForm.addEventListener("submit", (e) => {
@@ -1096,18 +1101,7 @@
         });
       }
 
-      // ফরগট পাসওয়ার্ড
-      const forgotBtn = document.getElementById("forgotBtn");
-      if (forgotBtn) {
-        forgotBtn.addEventListener("click", () => {
-          const email = prompt("Enter your admin registered email:");
-          if (email) {
-            alert(`Instructions sent to ${email}`);
-          }
-        });
-      }
-
-      // লগআউট
+      // ৫. লগআউট
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
         logoutBtn.addEventListener("click", (e) => {
