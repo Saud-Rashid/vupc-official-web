@@ -1350,12 +1350,12 @@ loginForm.addEventListener("submit", async (e) => {
 });
 
       document.getElementById("logoutBtn").addEventListener("click", (e) => {
-        e.preventDefault();
-        dashView.classList.remove("show");
-        loginView.style.display = "flex";
-        modeTag.textContent = "Admin Portal";
-        loginForm.reset();
-      });
+  e.preventDefault();
+  dashView.classList.remove("show");
+  loginView.style.display = "flex";
+  modeTag.textContent = "Admin Portal";
+  loginForm.reset();
+});
 
       // ---------- forgot password flow ----------
       const loginFormView = document.getElementById("loginFormView");
