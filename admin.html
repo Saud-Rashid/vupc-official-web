@@ -1005,51 +1005,92 @@
       </div>
     </main>
 
-  <script>
-      // ১. রেজিস্ট্রেশন ফর্ম সাবমিট ইভেন্ট
-      const registrationForm = document.querySelector("form") || document.getElementById("registrationForm");
+   <script>
+      const FIREBASE_DB_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
+      let teams = [];
 
-      if (registrationForm) {
-        registrationForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          // ফর্মে থাকা ইনপুটগুলোর ভ্যালু ধরা
-          const teamNameInput = document.querySelector('input[name="teamName"], input[placeholder*="Team"], #teamName');
-          const emailInput = document.querySelector('input[type="email"], input[name="email"], #email');
-          const gatewayInput = document.querySelector('select[name="gateway"], input[name="gateway"], #gateway');
-          const trxInput = document.querySelector('input[name="trx"], input[placeholder*="TRX"], #trx');
-
-          // ফায়ারবেসে পাঠানোর জন্য ডাটা তৈরি
-          const newTeamData = {
-            name: teamNameInput ? teamNameInput.value : "New Team",
-            email: emailInput ? emailInput.value : "participant@vupc.ac.bd",
-            members: "3 Members",
-            gateway: gatewayInput ? gatewayInput.value : "bKash",
-            trx: trxInput ? trxInput.value : "TRX" + Math.floor(100000 + Math.random() * 900000),
-            status: "Active",
-            createdAt: new Date().toISOString()
-          };
-
-          try {
-            // ২. Firebase Realtime Database-এ সরাসরি POST রিকোয়েস্ট
-            const res = await fetch('https://vupc-official-web-default-rtdb.firebaseio.com/teams.json', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(newTeamData)
-            });
-
-            if (res.ok) {
-              alert("Registration Successful! Team added to Firebase.");
-              registrationForm.reset();
-            } else {
-              alert("Failed to register. Status: " + res.status);
-            }
-          } catch (err) {
-            console.error("Registration submission error:", err);
-            alert("Connection error. Please try again.");
+      // ১. ডাটাবেজ থেকে ডাটা এনে ড্যাশবোর্ডে দেখানো
+      async function fetchLiveTeams() {
+        try {
+          const res = await fetch(FIREBASE_DB_URL);
+          if (res.ok) {
+            const data = await res.json();
+            teams = data ? (Array.isArray(data) ? data.filter(Boolean) : Object.keys(data).map(k => ({ id: k, ...data[k] }))) : [];
+            renderDashboard();
           }
+        } catch (err) {
+          console.error("Firebase fetch error:", err);
+        }
+      }
+
+      function renderDashboard() {
+        const totalTeams = teams.length;
+        const verifiedCount = teams.filter(t => t.status === 'Active' || t.status === 'Verified' || t.verified).length;
+        const pendingCount = totalTeams - verifiedCount;
+        const totalParticipants = totalTeams * 3;
+
+        // কাউন্টার আপডেট
+        const statElements = Array.from(document.querySelectorAll('b, h2, h3')).filter(el => /^\d+$/.test(el.textContent.trim()));
+        if (statElements.length >= 4) {
+          statElements[0].textContent = totalTeams;
+          statElements[1].textContent = verifiedCount;
+          statElements[2].textContent = pendingCount;
+          statElements[3].textContent = totalParticipants;
+        }
+
+        // টেবিল ডাটা আপডেট
+        const tbody = document.querySelector("#teamsTable tbody") || document.querySelector("tbody");
+        if (!tbody) return;
+
+        if (teams.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">No teams found in Firebase.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = teams.map(t => `
+          <tr>
+            <td><strong>${t.name || t.teamName || 'N/A'}</strong></td>
+            <td>${t.email || t.contactEmail || 'N/A'}</td>
+            <td>${t.members || '3 Members'}</td>
+            <td>${t.gateway || 'bKash'}</td>
+            <td>${t.trx || 'N/A'}</td>
+            <td><span class="verify-toggle ${t.status === 'Active' ? 'verified' : 'pending'}">${t.status || 'Active'}</span></td>
+          </tr>
+        `).join("");
+      }
+
+      // ২. লগইন বাটন হ্যান্ডলার (লগইন এ চাপ দিলে সরাসরি ড্যাশবোর্ড খুলবে)
+      const loginForm = document.getElementById("loginForm") || document.querySelector("form");
+      if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const loginView = document.getElementById("loginView");
+          const dashView = document.getElementById("dashView");
+          const modeTag = document.getElementById("modeTag");
+
+          if (loginView) loginView.style.display = "none";
+          if (dashView) dashView.classList.add("show");
+          if (modeTag) modeTag.textContent = "Dashboard";
+
+          fetchLiveTeams();
+        });
+      }
+
+      // ৩. ফরগট পাসওয়ার্ড
+      const forgotBtn = document.getElementById("forgotBtn");
+      if (forgotBtn) {
+        forgotBtn.addEventListener("click", () => {
+          const email = prompt("Enter your admin registered email:");
+          if (email) alert(`Reset instructions sent to ${email}`);
+        });
+      }
+
+      // ৪. লগআউট
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          location.reload();
         });
       }
     </script>
