@@ -814,7 +814,7 @@
                 Invalid Admin ID / Email or Password.
               </div>
 
-              <form id="loginForm">
+              <form id="loginForm" onsubmit="handleAdminLogin(event)">
                 <div class="field">
                   <label for="adminId">Admin ID / Email</label>
                   <input
@@ -1009,6 +1009,22 @@
       const FIREBASE_DB_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
       let teams = [];
 
+      // ১. লগইন ফাংশন (সরাসরি Form Action বাইপাস করবে)
+      function handleAdminLogin(event) {
+        if (event) event.preventDefault();
+        
+        const loginView = document.getElementById("loginView");
+        const dashView = document.getElementById("dashView");
+        const modeTag = document.getElementById("modeTag");
+
+        if (loginView) loginView.style.display = "none";
+        if (dashView) dashView.classList.add("show");
+        if (modeTag) modeTag.textContent = "Dashboard";
+
+        fetchLiveTeams();
+      }
+
+      // ২. ফায়ারবেস থেকে ডাটা আনা
       async function fetchLiveTeams() {
         try {
           const res = await fetch(FIREBASE_DB_URL);
@@ -1022,6 +1038,7 @@
         }
       }
 
+      // ৩. ড্যাশবোর্ড আপডেট
       function renderDashboard() {
         const totalTeams = teams.length;
         const verifiedCount = teams.filter(t => t.status === 'Active' || t.status === 'Verified' || t.verified).length;
@@ -1055,27 +1072,6 @@
           </tr>
         `).join("");
       }
-
-      // নির্দিষ্টভাবে লগইন ফর্ম সাবমিট হ্যান্ডলার
-      document.addEventListener("DOMContentLoaded", () => {
-        const loginForm = document.getElementById("loginForm");
-        
-        if (loginForm) {
-          loginForm.onsubmit = function (e) {
-            e.preventDefault();
-            
-            const loginView = document.getElementById("loginView");
-            const dashView = document.getElementById("dashView");
-            const modeTag = document.getElementById("modeTag");
-
-            if (loginView) loginView.style.display = "none";
-            if (dashView) dashView.classList.add("show");
-            if (modeTag) modeTag.textContent = "Dashboard";
-
-            fetchLiveTeams();
-          };
-        }
-      });
     </script>
   </body>
 </html>
