@@ -1009,7 +1009,6 @@
       const FIREBASE_DB_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
       let teams = [];
 
-      // ১. ডাটাবেজ থেকে ডাটা এনে ড্যাশবোর্ডে দেখানো
       async function fetchLiveTeams() {
         try {
           const res = await fetch(FIREBASE_DB_URL);
@@ -1029,7 +1028,6 @@
         const pendingCount = totalTeams - verifiedCount;
         const totalParticipants = totalTeams * 3;
 
-        // কাউন্টার আপডেট
         const statElements = Array.from(document.querySelectorAll('b, h2, h3')).filter(el => /^\d+$/.test(el.textContent.trim()));
         if (statElements.length >= 4) {
           statElements[0].textContent = totalTeams;
@@ -1038,7 +1036,6 @@
           statElements[3].textContent = totalParticipants;
         }
 
-        // টেবিল ডাটা আপডেট
         const tbody = document.querySelector("#teamsTable tbody") || document.querySelector("tbody");
         if (!tbody) return;
 
@@ -1059,40 +1056,26 @@
         `).join("");
       }
 
-      // ২. লগইন বাটন হ্যান্ডলার (লগইন এ চাপ দিলে সরাসরি ড্যাশবোর্ড খুলবে)
-      const loginForm = document.getElementById("loginForm") || document.querySelector("form");
-      if (loginForm) {
-        loginForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          const loginView = document.getElementById("loginView");
-          const dashView = document.getElementById("dashView");
-          const modeTag = document.getElementById("modeTag");
+      // নির্দিষ্টভাবে লগইন ফর্ম সাবমিট হ্যান্ডলার
+      document.addEventListener("DOMContentLoaded", () => {
+        const loginForm = document.getElementById("loginForm");
+        
+        if (loginForm) {
+          loginForm.onsubmit = function (e) {
+            e.preventDefault();
+            
+            const loginView = document.getElementById("loginView");
+            const dashView = document.getElementById("dashView");
+            const modeTag = document.getElementById("modeTag");
 
-          if (loginView) loginView.style.display = "none";
-          if (dashView) dashView.classList.add("show");
-          if (modeTag) modeTag.textContent = "Dashboard";
+            if (loginView) loginView.style.display = "none";
+            if (dashView) dashView.classList.add("show");
+            if (modeTag) modeTag.textContent = "Dashboard";
 
-          fetchLiveTeams();
-        });
-      }
-
-      // ৩. ফরগট পাসওয়ার্ড
-      const forgotBtn = document.getElementById("forgotBtn");
-      if (forgotBtn) {
-        forgotBtn.addEventListener("click", () => {
-          const email = prompt("Enter your admin registered email:");
-          if (email) alert(`Reset instructions sent to ${email}`);
-        });
-      }
-
-      // ৪. লগআউট
-      const logoutBtn = document.getElementById("logoutBtn");
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          location.reload();
-        });
-      }
+            fetchLiveTeams();
+          };
+        }
+      });
     </script>
   </body>
 </html>
