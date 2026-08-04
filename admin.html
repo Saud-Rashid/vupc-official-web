@@ -1017,10 +1017,19 @@
 
 async function fetchLiveTeams() {
   try {
-    const res = await fetch(`${API_BASE}/teams`);
+    const token = localStorage.getItem('vupc_admin_token');
+    
+    const res = await fetch(`${API_BASE}/teams`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+
     if (res.ok) {
       teams = await res.json();
       renderTeams();
+    } else {
+      console.error("Failed to fetch teams:", res.status);
     }
   } catch (err) {
     console.error("Error fetching teams:", err);
@@ -1282,7 +1291,7 @@ loginForm.addEventListener("submit", async (e) => {
     
     const data = await res.json();
 
-    if (res.ok && data.success) {
+    if (res.ok && (data.success || data.token)) {
       if (data.token) localStorage.setItem('vupc_admin_token', data.token);
       loginView.style.display = "none";
       dashView.classList.add("show");
