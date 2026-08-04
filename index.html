@@ -2312,6 +2312,54 @@
     });
   });
 </script>
+<script>
+      const FIREBASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
+
+      const regForm = document.querySelector("form") || document.getElementById("registrationForm");
+
+      if (regForm) {
+        regForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          // ইনপুট ফিল্ড থেকে ভ্যালু সংগ্রহ
+          const inputs = regForm.querySelectorAll("input, select");
+          let formData = {
+            status: "Active",
+            createdAt: new Date().toISOString()
+          };
+
+          inputs.forEach(input => {
+            if (input.name) {
+              formData[input.name] = input.value;
+            }
+          });
+
+          // ব্যাকআপ ভ্যালু (যদি ফিল্ডে name ট্যাগ না থাকে)
+          if (!formData.name && !formData.teamName) {
+            const textInput = regForm.querySelector('input[type="text"]');
+            if (textInput) formData.name = textInput.value;
+          }
+
+          try {
+            const res = await fetch(FIREBASE_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(formData)
+            });
+
+            if (res.ok) {
+              alert("Registration Successful!");
+              regForm.reset();
+            } else {
+              alert("Failed to submit to Firebase.");
+            }
+          } catch (err) {
+            console.error("Error:", err);
+            alert("Network error.");
+          }
+        });
+      }
+    </script>
 
 </body>
 </html>
