@@ -2312,6 +2312,57 @@
     });
   });
 </script>
+<!-- সরাসরি ফায়ারবেসে ডাটা পাঠানোর ক্লায়েন্ট-সাইড স্ক্রিপ্ট -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // সাইটের প্রথম/একমাত্র ফর্মটি সিলেক্ট করা
+        const form = document.querySelector("form");
 
+        if (form) {
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault(); // পেজ যেন রিলোড না নেয়
+
+            // ফর্মে থাকা সব ইনপুট থেকে ডাটা তুলে আনা
+            const formData = new FormData(form);
+            const data = {};
+            
+            formData.forEach((value, key) => {
+              data[key] = value;
+            });
+
+            // ডিফল্ট ফিল্ড সেটআপ (যদি ফর্মে নাম না থাকে)
+            data.status = data.status || "Active";
+            data.createdAt = new Date().toISOString();
+            data.name = data.name || data.teamName || "New Registered Team";
+            data.email = data.email || data.contactEmail || "N/A";
+            data.gateway = data.gateway || "bKash";
+            data.trx = data.trx || "TRX" + Math.floor(100000 + Math.random() * 900000);
+
+            try {
+              // সরাসরি Firebase Realtime Database-এ POST
+              const response = await fetch("https://vupc-official-web-default-rtdb.firebaseio.com/teams.json", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+              });
+
+              if (response.ok) {
+                alert("Registration Successful! Data added to Firebase.");
+                form.reset();
+              } else {
+                alert("Failed to submit! Check Firebase Security Rules.");
+              }
+            } catch (error) {
+              console.error("Firebase submit error:", error);
+              alert("Network error while submitting.");
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
 </body>
 </html>
