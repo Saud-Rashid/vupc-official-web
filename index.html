@@ -1243,7 +1243,7 @@
 
         <div class="stats-row">
           <div class="stat"><b>3</b><span>Members / Team</span></div>
-          <div class="stat"><b>200+</b><span>Teams Expected</span></div>
+          <div class="stat"><b>200+</b><span>Participants Expected</span></div>
           <div class="stat"><b>৳15,000+</b><span>Prize Pool</span></div>
         </div>
 
@@ -1511,7 +1511,7 @@
         <div class="panel-head"><span></span><span></span><span></span><em> — Fees & Additional Info</em></div>
         <div class="panel-body" style="padding:1.6rem 1.6rem 1.8rem">
           <div class="fee-strip" style="margin-top:0">
-            <span class="fee-amt">Registration Fee: ৳510 / team</span>
+            <span class="fee-amt">Registration Fee: ৳510/team</span>
             <span class="fee-note">Includes Certificate, T-shirts, Lunch, Snacks &amp; more</span>
           </div>
         </div>
@@ -1636,7 +1636,7 @@
       Download PDF Receipt Again
     </button>
     <button type="button" class="btn btn-primary btn-block" id="modalDoneBtn" style="margin-top:.7rem;justify-content:center;">
-      Done — Back to Site
+      Done ← Back to Site
     </button>
   </div>
 </div>
@@ -2312,54 +2312,6 @@
     });
   });
 </script>
-<script>
-      const FIREBASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
-
-      const regForm = document.querySelector("form") || document.getElementById("registrationForm");
-
-      if (regForm) {
-        regForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          // ইনপুট ফিল্ড থেকে ভ্যালু সংগ্রহ
-          const inputs = regForm.querySelectorAll("input, select");
-          let formData = {
-            status: "Active",
-            createdAt: new Date().toISOString()
-          };
-
-          inputs.forEach(input => {
-            if (input.name) {
-              formData[input.name] = input.value;
-            }
-          });
-
-          // ব্যাকআপ ভ্যালু (যদি ফিল্ডে name ট্যাগ না থাকে)
-          if (!formData.name && !formData.teamName) {
-            const textInput = regForm.querySelector('input[type="text"]');
-            if (textInput) formData.name = textInput.value;
-          }
-
-          try {
-            const res = await fetch(FIREBASE_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(formData)
-            });
-
-            if (res.ok) {
-              alert("Registration Successful!");
-              regForm.reset();
-            } else {
-              alert("Failed to submit to Firebase.");
-            }
-          } catch (err) {
-            console.error("Error:", err);
-            alert("Network error.");
-          }
-        });
-      }
-    </script>
 
 </body>
 </html>
