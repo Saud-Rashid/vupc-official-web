@@ -1011,6 +1011,9 @@
       // Wire this up to your backend: fetch registrations from your API/DB
       // and map each record into this same shape.
       let teams = [];
+      const tbody = document.querySelector("#teamsTable tbody");
+      const searchInput = document.getElementById("teamSearch");
+      const searchCount = document.getElementById("searchCount");
 
 async function fetchLiveTeams() {
   try {
