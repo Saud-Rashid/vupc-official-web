@@ -12,3 +12,8 @@ yarn-error.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+*.json
+!.json
+vupc-official-web-firebase-adminsdk-fbsvc-b9e7af3373.json
+firebase-key.json
