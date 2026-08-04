@@ -983,36 +983,21 @@
         </p>
       </div>
 
-      <!-- TEAM DETAIL MODAL -->
-      <div class="modal-overlay" id="teamModal">
-        <div class="panel modal-card">
-          <div class="panel-head">
-            <span></span><span></span><span></span
-            ><em>team-detail.json</em>
-            <button
-              type="button"
-              class="modal-close"
-              id="modalCloseBtn"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-          <div class="modal-body" id="modalBody">
-            <!-- injected by JS -->
-          </div>
-        </div>
+      <!-- Team Details Modal -->
+    <div id="detailsModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(5,4,10,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:20px;">
+      <div style="background:#130f24; border:1px solid rgba(255,255,255,0.15); border-radius:16px; max-width:600px; width:100%; padding:1.8rem; color:#f5f3fa; position:relative; max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+        <button onclick="closeDetailsModal()" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.08); border:none; color:#aaa; width:32px; height:32px; border-radius:50%; font-weight:bold; cursor:pointer;">✕</button>
+        <h3 id="modalTeamName" style="font-family:'Space Grotesk',sans-serif; font-size:1.4rem; color:#e04fe0; margin-bottom:1rem;">Team Details</h3>
+        <div id="modalBodyContent"></div>
       </div>
-    </main>
+    </div>
 
-   <script>
-      const FIREBASE_DB_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams.json';
-      let teams = [];
+    <script>
+      const FIREBASE_BASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams';
+      let teamsData = [];
 
-      // ১. লগইন ফাংশন (সরাসরি Form Action বাইপাস করবে)
       function handleAdminLogin(event) {
         if (event) event.preventDefault();
-        
         const loginView = document.getElementById("loginView");
         const dashView = document.getElementById("dashView");
         const modeTag = document.getElementById("modeTag");
@@ -1024,13 +1009,12 @@
         fetchLiveTeams();
       }
 
-      // ২. ফায়ারবেস থেকে ডাটা আনা
       async function fetchLiveTeams() {
         try {
-          const res = await fetch(FIREBASE_DB_URL);
+          const res = await fetch(`${FIREBASE_BASE_URL}.json`);
           if (res.ok) {
             const data = await res.json();
-            teams = data ? (Array.isArray(data) ? data.filter(Boolean) : Object.keys(data).map(k => ({ id: k, ...data[k] }))) : [];
+            teamsData = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
             renderDashboard();
           }
         } catch (err) {
@@ -1038,10 +1022,9 @@
         }
       }
 
-      // ৩. ড্যাশবোর্ড আপডেট
       function renderDashboard() {
-        const totalTeams = teams.length;
-        const verifiedCount = teams.filter(t => t.status === 'Active' || t.status === 'Verified' || t.verified).length;
+        const totalTeams = teamsData.length;
+        const verifiedCount = teamsData.filter(t => t.status === 'Active' || t.status === 'Verified').length;
         const pendingCount = totalTeams - verifiedCount;
         const totalParticipants = totalTeams * 3;
 
@@ -1056,21 +1039,103 @@
         const tbody = document.querySelector("#teamsTable tbody") || document.querySelector("tbody");
         if (!tbody) return;
 
-        if (teams.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">No teams found in Firebase.</td></tr>`;
+        if (teamsData.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:#85809b;">No registered teams found.</td></tr>`;
           return;
         }
 
-        tbody.innerHTML = teams.map(t => `
-          <tr>
-            <td><strong>${t.name || t.teamName || 'N/A'}</strong></td>
-            <td>${t.email || t.contactEmail || 'N/A'}</td>
-            <td>${t.members || '3 Members'}</td>
-            <td>${t.gateway || 'bKash'}</td>
-            <td>${t.trx || 'N/A'}</td>
-            <td><span class="verify-toggle ${t.status === 'Active' ? 'verified' : 'pending'}">${t.status || 'Active'}</span></td>
-          </tr>
-        `).join("");
+        tbody.innerHTML = teamsData.map(t => {
+          const statusClass = t.status === 'Active' || t.status === 'Verified' ? 'verified' : 'pending';
+          const displayStatus = t.status || 'Pending';
+          
+          return `
+            <tr>
+              <td><strong>${t.name || t.teamName || 'N/A'}</strong></td>
+              <td>${t.email || t.contactEmail || 'N/A'}</td>
+              <td>${t.members ? (typeof t.members === 'string' ? t.members : '3 Members') : '3 Members'}</td>
+              <td>${t.gateway || 'bKash'}</td>
+              <td>${t.trx || t.trxId || 'N/A'}</td>
+              <td>
+                <span onclick="toggleVerification('${t.id}', '${displayStatus}')" class="verify-toggle ${statusClass}" style="cursor:pointer; user-select:none;">
+                  ${displayStatus}
+                </span>
+              </td>
+              <td>
+                <button onclick="showTeamDetails('${t.id}')" style="background:rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.3); color:#22d3ee; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.78rem; font-family:monospace; cursor:pointer;">
+                  View Details
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      // ১. টগল ভেরিফিকেশন স্ট্যাটাস
+      async function toggleVerification(teamId, currentStatus) {
+        const newStatus = (currentStatus === 'Active' || currentStatus === 'Verified') ? 'Pending' : 'Active';
+        try {
+          const res = await fetch(`${FIREBASE_BASE_URL}/${teamId}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          });
+          if (res.ok) {
+            const team = teamsData.find(t => t.id === teamId);
+            if (team) team.status = newStatus;
+            renderDashboard();
+          }
+        } catch (err) {
+          console.error("Status update error:", err);
+        }
+      }
+
+      // ২. ডিটেইলস মডাল প্রদর্শন
+      function showTeamDetails(teamId) {
+        const team = teamsData.find(t => t.id === teamId);
+        if (!team) return;
+
+        document.getElementById("modalTeamName").textContent = team.name || team.teamName || "Team Details";
+        
+        const details = team.details || team.detail || {};
+        const membersList = details.membersFull || [];
+
+        let membersHtml = '';
+        if (membersList.length > 0) {
+          membersHtml = membersList.map((m, i) => `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:0.9rem; border-radius:8px; margin-bottom:0.6rem;">
+              <div style="color:#fbbf24; font-family:monospace; font-size:0.8rem; font-weight:bold; margin-bottom:0.3rem;">MEMBER ${i + 1}</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem; font-size:0.88rem;">
+                <div><strong>Name:</strong> ${m.name || 'N/A'}</div>
+                <div><strong>Student ID:</strong> ${m.id || 'N/A'}</div>
+                <div><strong>Semester:</strong> ${m.semester || 'N/A'}</div>
+                <div><strong>Size:</strong> ${m.size || 'N/A'}</div>
+                <div><strong>Mobile:</strong> ${m.mobile || 'N/A'}</div>
+                <div><strong>Email:</strong> ${m.email || 'N/A'}</div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          membersHtml = `<p style="color:#9b93ae;">Members summary: ${team.members || 'N/A'}</p>`;
+        }
+
+        const modalBody = document.getElementById("modalBodyContent");
+        modalBody.innerHTML = `
+          <div style="margin-bottom:1.2rem; background:rgba(124,92,245,0.1); border:1px solid rgba(124,92,245,0.3); padding:0.9rem; border-radius:8px; font-size:0.9rem;">
+            <div><strong>Contact Person:</strong> ${details.contactPerson || details.contact || 'N/A'}</div>
+            <div><strong>Contact Phone:</strong> ${team.contactPhone || team.trxPhone || 'N/A'}</div>
+            <div><strong>Payment Method:</strong> ${team.gateway || 'N/A'}</div>
+            <div><strong>Transaction ID:</strong> ${team.trx || team.trxId || 'N/A'}</div>
+            <div><strong>Registration Time:</strong> ${team.createdAt ? new Date(team.createdAt).toLocaleString() : 'N/A'}</div>
+          </div>
+          <h4 style="font-size:1rem; margin-bottom:0.6rem; color:#22d3ee;">Full Member Info:</h4>
+          ${membersHtml}
+        `;
+
+        document.getElementById("detailsModal").style.display = "flex";
+      }
+
+      function closeDetailsModal() {
+        document.getElementById("detailsModal").style.display = "none";
       }
     </script>
   </body>
