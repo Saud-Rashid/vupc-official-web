@@ -1040,21 +1040,26 @@
       function renderTeams() {
         const tbody = document.querySelector("#teamsTable tbody");
         
-        // স্ট্যাটস সংখ্যা আপডেট
+        // স্ট্যাটাস সংখ্যা আপডেট
         const st1 = document.getElementById("st1");
         const st2 = document.getElementById("st2");
         const st3 = document.getElementById("st3");
         const st4 = document.getElementById("st4");
 
-        if (st1) st1.textContent = teams.length;
-        if (st2) st2.textContent = teams.filter(t => t.status === 'Active' || t.verified).length;
-        if (st3) st3.textContent = teams.length - teams.filter(t => t.status === 'Active' || t.verified).length;
-        if (st4) st4.textContent = teams.length * 3;
+        const totalTeams = teams.length;
+        const verifiedCount = teams.filter(t => t.status === 'Active' || t.verified).length;
+        const pendingCount = totalTeams - verifiedCount;
+        const totalParticipants = totalTeams * 3;
+
+        if (st1) st1.textContent = totalTeams;
+        if (st2) st2.textContent = verifiedCount;
+        if (st3) st3.textContent = pendingCount;
+        if (st4) st4.textContent = totalParticipants;
 
         if (!tbody) return;
 
         if (teams.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:2rem;">No teams found in database.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">No teams found in database.</td></tr>`;
           return;
         }
 
@@ -1063,6 +1068,8 @@
             <td><strong>${t.name || t.title || 'Code Ninjas'}</strong></td>
             <td>${t.email || 'admin@vupc.ac.bd'}</td>
             <td>${t.description || 'Registered Team'}</td>
+            <td>${t.gateway || 'bKash'}</td>
+            <td>${t.trx || 'TRX123456'}</td>
             <td>
               <span class="verify-toggle ${t.status === 'Active' ? 'verified' : 'pending'}">
                 ${t.status || 'Active'}
