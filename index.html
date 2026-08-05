@@ -1324,7 +1324,7 @@
 
             <div class="day-block">
               <span class="day-date">Aug 10 – Aug 23, 2026 — Online</span>
-              <div class="slot"><span>CP Training Camp </span><b>Upcoming</b></div>
+              <div class="slot"><span>CP Training Camp</span><b>Upcoming</b></div>
             </div>
           </div>
         </div>
@@ -1387,7 +1387,7 @@
           </div>
 
           <div class="fee-strip">
-            <span class="fee-amt">Registration Window: Aug 9 – Aug 20, 2026</span>
+            <span class="fee-amt">Registration Window: Aug 09 – Aug 20, 2026</span>
           </div>
 
           <a href="#register" class="btn btn-primary" style="margin-top:1.6rem">Register for Track 1 →</a>
@@ -2011,6 +2011,38 @@
 
     content.innerHTML = html;
     attachWizardFieldListeners();
+    attachEnterKeyNav();
+  }
+
+  // ---- Enter-key navigation within the current step ----
+  // Previously, pressing Enter inside a form field had no explicit handler,
+  // so the browser fell back to its native "implicit form submission"
+  // behavior. Desktop browsers mostly only do this when a step has exactly
+  // one field (e.g. Step A: Team Name), so it was easy to miss. Mobile
+  // keyboards are far more consistent about firing that implicit submit on
+  // Enter/Go — and since the form has no action/preventDefault, that submit
+  // reloads the page, which is what was snapping mobile back to the top of
+  // the reg panel. Handling Enter ourselves (move to next field, or advance
+  // the step on the last field) fixes the mobile jump and makes the
+  // behavior consistent and intentional on every device.
+  function attachEnterKeyNav(){
+    const content = document.getElementById('stepContent');
+    const focusables = Array.from(content.querySelectorAll('input, select'));
+    focusables.forEach((el, idx) => {
+      el.addEventListener('keydown', (e) => {
+        if(e.key !== 'Enter') return;
+        e.preventDefault();
+        const next = focusables[idx + 1];
+        if(next){
+          next.focus();
+          if(typeof next.select === 'function' && next.tagName === 'INPUT'){
+            next.select();
+          }
+        } else {
+          document.getElementById('nextBtn').click();
+        }
+      });
+    });
   }
 
   function attachWizardFieldListeners(){
@@ -2067,6 +2099,14 @@
     const panel = document.getElementById('regWizardPanel');
     if(panel) panel.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'});
   }
+
+  // Belt-and-suspenders: never let the browser's native form submission
+  // fire (it has no action/handler, so it would just reload the page —
+  // which is the "jumps to the top" bug on mobile). All real navigation
+  // goes through backBtn/nextBtn/attachEnterKeyNav instead.
+  document.getElementById('regForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+  });
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
     if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
