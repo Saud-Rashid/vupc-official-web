@@ -1,4 +1,4 @@
-<!-- with sponser part -->
+<!-- Frontend -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -427,30 +427,71 @@
      background (no transparency) still looks clean against the dark header. */
   .sponsor-logo-chip{
     height:44px;
-    padding:.3rem .8rem;
     display:flex;
     align-items:center;
     justify-content:center;
-    background:#ffffff;
-    border-radius:8px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.25);
   }
   .sponsor-logo-chip img{
     height:100%;
     width:auto;
-    max-width:120px;
+    max-width:130px;
     object-fit:contain;
-    filter:none;
+    border-radius:8px;
+  }
+  /* clickable wrapper: logo + sponsor name, links out to their page */
+  .sponsor-credit{
+    display:inline-flex;
+    align-items:center;
+    gap:.55rem;
+    transition:opacity .2s ease;
+  }
+  .sponsor-credit:hover{opacity:.8;}
+  .sponsor-credit .sponsor-name{
+    font-family:var(--font-mono);
+    font-size:.85rem;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;
   }
   @media (max-width:640px){
     .brand-strip{column-gap:.8rem;padding:.75rem 14px;}
     .bs-logo-slot{height:34px;width:72px;}
     .sponsor-slot{height:34px;padding:0 .7rem;}
     .sponsor-slot img{height:24px;}
-    .sponsor-logo-chip{height:34px;padding:.25rem .6rem;}
-    .sponsor-logo-chip img{max-width:90px;}
+    .sponsor-logo-chip{height:36px;}
+    .sponsor-logo-chip img{max-width:100px;}
     .brand-strip span.bs-label{display:none;}
     .bs-divider-v{display:none;}
+  }
+
+  /* ============ HERO SPONSOR STRIP (under theme line) ============ */
+  .hero-sponsor{
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+    margin-bottom:1.5rem;
+    flex-wrap:wrap;
+  }
+  .hero-sponsor .bs-label{margin-right:0;}
+
+  /* ============ SCHEDULE SPONSOR NOTE ============ */
+  .schedule-sponsor{
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+    margin-bottom:1.4rem;
+    padding-bottom:1.2rem;
+    border-bottom:1px dashed var(--border);
+    flex-wrap:wrap;
+  }
+  .schedule-sponsor .ss-text{
+    font-family:var(--font-mono);
+    font-size:.78rem;
+    color:var(--text-dim);
+  }
+  .schedule-sponsor .ss-text b{
+    color:var(--amber);
+    font-weight:700;
   }
 
   /* ============ BUTTONS ============ */
@@ -1167,7 +1208,7 @@
   <div class="blob blob-4"></div>
 </div>
 
-<!-- ==================== HEADER COMBINED ==================== -->
+<!-- ==================== HEADER ==================== -->
 <header class="site-header">
   <nav class="nav">
     <div class="wrap">
@@ -1204,19 +1245,6 @@
       <div class="bs-logo-slot"><img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo"></div>
 
     </div>
-
-    <div class="bs-divider-v"></div>
-
-    <!-- SPONSORS: each real sponsor is an <img class="sponsor-logo-chip"><img></div> block.
-         "assets/s_logo.jpg" is a placeholder path — drop your actual sponsor logo file
-         into the assets/ folder using that same name (or update the src below).
-         To add another sponsor, duplicate the whole .sponsor-logo-chip block —
-         the row wraps automatically as more are added. -->
-    <div class="bs-group bs-sponsors">
-      <span class="bs-label">sponsored by</span>
-      <div class="sponsor-logo-chip"><img src="assets/s_logo.jpg" alt="Sponsor logo"></div>
-      <div class="sponsor-slot sponsor-slot--add"><span>More Slots Available</span></div>
-    </div>
   </div>
 </header>
 
@@ -1239,7 +1267,17 @@
         <div class="badge"><span class="pulse"></span> Season 5 is here</div>
         <h1>CODE <span class="grad-text">HARBOR</span></h1>
         <div class="theme-line">Navigating Challenges — Season 5</div>
-        <p class="desc">The ultimate inter-university programming battle, hosted by the Varendra University Programming Club and the Dept. of CSE. Bring your team and chart a course through the toughest problems on the harbor.</p>
+
+            <!-- SPONSOR: Phitron -->
+        <div class="hero-sponsor">
+          <span class="bs-label">Powered by</span>
+          <a href="https://phitron.io/" target="_blank" rel="noopener" class="sponsor-credit">
+            <span class="sponsor-logo-chip"><img src="assets/s_logo.png" alt="Sponsor logo"></span>
+          </a>
+        </div>
+
+        <p class="desc">Varendra University Programming Club and the Department of Computer Science & Engineering presents Code Harbor Navigating Challenges - Season 5 powered by Phitron. The ultimate intra-university coding competition.
+Form your team, harness your technical prowess, and chart a path through high-stakes competitive programming problems to take home the prize pool and championship title.</p>
 
         <div class="stats-row">
           <div class="stat"><b>3</b><span>Members / Team</span></div>
@@ -1301,28 +1339,33 @@
         <div class="panel" data-reveal>
           <div class="panel-head"><span></span><span></span><span></span><em> — Schedule</em></div>
           <div class="panel-body">
-            <h3>📅 Training Camp &amp; CP Prep</h3>
+            <h3>📅 Training Program Schedule &amp; CP Preparation</h3>
 
-            <div class="day-block">
-              <span class="day-date">Registration</span>
-              <div class="slot"><span>Open for entries</span><b>Aug 3 – Aug 17, 2026</b></div>
+            <!-- SPONSOR: Sohoj Coding -->
+            <div class="schedule-sponsor">
+              <span class="bs-label">Sponsored by</span>
+              <a href="https://www.shohojcoding.com/" target="_blank" rel="noopener" class="sponsor-credit">
+                <span class="sponsor-logo-chip"><img src="assets/s_logo2.png" alt="Sponsor logo"></span>
+              </a>
+              <span class="ss-text">Training camp &amp; CP prep proudly sponsered by <b>Sohoj Coding</b></span>
             </div>
 
             <div class="day-block">
-              <span class="day-date">August 9, 2026 — Training Camp</span>
-              <div class="slot-venue">Venue: Auditorium</div>
-              <div class="slot"><span>Reporting</span><b>9:00 – 9:15 AM</b></div>
+              <span class="day-date">August 9, 2026 — Training Session</span>
+              <div class="slot-venue">Venue: University Auditorium</div>
+              <div class="slot"><span>Reporting &amp; Regestration</span><b>9:00 – 9:15 AM</b></div>
               <div class="slot"><span>Welcome Speech</span><b>9:30 – 10:00 AM</b></div>
-              <div class="slot"><span>Session 1 (all participants)</span><b>10:00 – 11:30 AM</b></div>
-              <div class="slot"><span>Break</span><b>11:30 – 11:45 AM</b></div>
-              <div class="slot"><span>Session 2 (1st &amp; 2nd Sem)</span><b>11:45 AM – 1:15 PM</b></div>
-              <div class="slot-venue">Venue: CSE Lab</div>
-              <div class="slot"><span>Session 2 (Senior Students)</span><b>11:45 AM – 1:15 PM</b></div>
+              <div class="slot"><span>Session 1 — Competitive Programming Fundamentals</span><b>10:00 – 11:30 AM</b></div>
+              <div class="slot"><span>Meet with IUT ICPC Team</span><b>11:35 – 11:50 AM</b></div>
+              <div class="slot"><span>Discussion &amp; Sharing of Upcoming 14-day Training Camp</span><b>11:50 AM – 12:10 PM</b></div>
+              <div class="slot"><span>Refreshment Break &amp; Snacks Distribution</span><b>12:10 PM – 12:30 PM</b></div>
+              <div class="slot-venue">Venue: Lab 128 (Senior Students & Trainers) </div>
+              <div class="slot"><span>Session 2 — Open Discussion : CP &amp; IT Challenges and Tricks to Overcome Them </span><b>12:30 PM – 1:30 PM</b></div>
             </div>
 
             <div class="day-block">
               <span class="day-date">Aug 10 – Aug 23, 2026 — Online</span>
-              <div class="slot"><span>CP Training (1st &amp; 2nd Semester only)</span><b>Upcoming</b></div>
+              <div class="slot"><span>CP Training Camp</span><b>Upcoming</b></div>
             </div>
           </div>
         </div>
@@ -1385,7 +1428,7 @@
           </div>
 
           <div class="fee-strip">
-            <span class="fee-amt">Registration Window: Aug 3 – Aug 17, 2026</span>
+            <span class="fee-amt">Registration Window: Aug 09 – Aug 20, 2026</span>
           </div>
 
           <a href="#register" class="btn btn-primary" style="margin-top:1.6rem">Register for Track 1 →</a>
@@ -1530,7 +1573,7 @@
 
             <div class="wizard-actions">
               <button type="button" class="btn btn-back" id="backBtn">← Back</button>
-              <button type="button" class="btn btn-primary" id="nextBtn">Next →</button>
+              <button type="submit" class="btn btn-primary" id="nextBtn">Next →</button>
             </div>
           </form>
 
@@ -2009,6 +2052,38 @@
 
     content.innerHTML = html;
     attachWizardFieldListeners();
+    attachEnterKeyNav();
+  }
+
+  // ---- Enter-key navigation within the current step ----
+  // Previously, pressing Enter inside a form field had no explicit handler,
+  // so the browser fell back to its native "implicit form submission"
+  // behavior. Desktop browsers mostly only do this when a step has exactly
+  // one field (e.g. Step A: Team Name), so it was easy to miss. Mobile
+  // keyboards are far more consistent about firing that implicit submit on
+  // Enter/Go — and since the form has no action/preventDefault, that submit
+  // reloads the page, which is what was snapping mobile back to the top of
+  // the reg panel. Handling Enter ourselves (move to next field, or advance
+  // the step on the last field) fixes the mobile jump and makes the
+  // behavior consistent and intentional on every device.
+  function attachEnterKeyNav(){
+    const content = document.getElementById('stepContent');
+    const focusables = Array.from(content.querySelectorAll('input, select'));
+    focusables.forEach((el, idx) => {
+      el.addEventListener('keydown', (e) => {
+        if(e.key !== 'Enter') return;
+        e.preventDefault();
+        const next = focusables[idx + 1];
+        if(next){
+          next.focus();
+          if(typeof next.select === 'function' && next.tagName === 'INPUT'){
+            next.select();
+          }
+        } else {
+          document.getElementById('nextBtn').click();
+        }
+      });
+    });
   }
 
   function attachWizardFieldListeners(){
@@ -2066,6 +2141,14 @@
     if(panel) panel.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'});
   }
 
+  // Belt-and-suspenders: never let the browser's native form submission
+  // fire (it has no action/handler, so it would just reload the page —
+  // which is the "jumps to the top" bug on mobile). All real navigation
+  // goes through backBtn/nextBtn/attachEnterKeyNav instead.
+  document.getElementById('regForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+  });
+
   document.getElementById('backBtn').addEventListener('click', ()=>{
     if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
     if(wiz.step>0){ wiz.step--; renderWizard(); }
@@ -2094,7 +2177,7 @@
     const contactIdx = parseInt((wiz.contact || '1').replace('Member ',''), 10) - 1;
     const contactMember = wiz.members[contactIdx] || wiz.members[0] || {};
 
-    // ১. ফায়ারবেসে পাঠানোর জন্য সকল মেম্বার ও পেমেন্টের পূর্ণাঙ্গ ডাটা
+    // ১. ফায়ারবেসে পাঠানোর জন্য সকল মেম্বার ও পেমেন্টের পূর্ণাঙ্গ ডাটা
     const firebasePayload = {
       name: wiz.teamName.trim(),
       email: contactMember.email || (wiz.members[0] ? wiz.members[0].email : ''),
@@ -2340,8 +2423,5 @@
     });
   });
 </script>
-
-  
-  
-  </body>
+</body>
 </html>
