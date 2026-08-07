@@ -177,6 +177,20 @@
   </style>
 </head>
 <body>
+  <div id="loginView" style="display: flex; position: fixed; inset: 0; z-index: 10000; background: #0a0714; align-items: center; justify-content: center; padding: 1rem;">
+  <div style="background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.18); padding: 2rem; border-radius: 16px; max-width: 400px; width: 100%; text-align: center;">
+    <h2 style="font-family: 'Space Grotesk', sans-serif; color: #f5f3fa; margin-bottom: 0.5rem;">Admin Access</h2>
+    <p style="color: #9b93ae; font-size: 0.85rem; margin-bottom: 1.5rem;">Enter security password to access dashboard</p>
+    
+    <form onsubmit="handleAdminLogin(event)">
+      <input type="password" id="adminPassInput" placeholder="Enter Password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-family: monospace; font-size: 1rem; margin-bottom: 1rem; outline: none;">
+      
+      <p id="loginErrorMsg" style="color: #ff4d4d; font-size: 0.85rem; display: none; margin-bottom: 1rem;"></p>
+      
+      <button type="submit" style="width: 100%; padding: 0.8rem; background: #e04fe0; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer;">Login</button>
+    </form>
+  </div>
+</div>
 
   <div class="container">
     <div class="header">
