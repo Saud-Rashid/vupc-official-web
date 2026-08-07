@@ -177,22 +177,25 @@
   </style>
 </head>
 <body>
-  <div id="loginView" style="display: flex; position: fixed; inset: 0; z-index: 10000; background: #0a0714; align-items: center; justify-content: center; padding: 1rem;">
-  <div style="background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.18); padding: 2rem; border-radius: 16px; max-width: 400px; width: 100%; text-align: center;">
-    <h2 style="font-family: 'Space Grotesk', sans-serif; color: #f5f3fa; margin-bottom: 0.5rem;">Admin Access</h2>
-    <p style="color: #9b93ae; font-size: 0.85rem; margin-bottom: 1.5rem;">Enter security password to access dashboard</p>
-    
-    <form onsubmit="handleAdminLogin(event)">
-      <input type="password" id="adminPassInput" placeholder="Enter Password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-family: monospace; font-size: 1rem; margin-bottom: 1rem; outline: none;">
-      
-      <p id="loginErrorMsg" style="color: #ff4d4d; font-size: 0.85rem; display: none; margin-bottom: 1rem;"></p>
-      
-      <button type="submit" style="width: 100%; padding: 0.8rem; background: #e04fe0; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer;">Login</button>
-    </form>
-  </div>
-</div>
 
-  <div class="container">
+  <!-- Login Overlay Section -->
+  <div id="loginView" style="display: flex; position: fixed; inset: 0; z-index: 10000; background: #0a0714; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.18); padding: 2rem; border-radius: 16px; max-width: 400px; width: 100%; text-align: center;">
+      <h2 style="font-family: 'Space Grotesk', sans-serif; color: #f5f3fa; margin-bottom: 0.5rem;">Admin Access</h2>
+      <p style="color: #9b93ae; font-size: 0.85rem; margin-bottom: 1.5rem;">Enter security password to access dashboard</p>
+      
+      <form onsubmit="handleAdminLogin(event)">
+        <input type="password" id="adminPassInput" placeholder="Enter Password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-family: monospace; font-size: 1rem; margin-bottom: 1rem; outline: none;">
+        
+        <p id="loginErrorMsg" style="color: #ff4d4d; font-size: 0.85rem; display: none; margin-bottom: 1rem;"></p>
+        
+        <button type="submit" style="width: 100%; padding: 0.8rem; background: #e04fe0; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer;">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Container (Hidden by default using style="display:none;") -->
+  <div class="container" id="dashView" style="display: none;">
     <div class="header">
       <div class="brand">VUPC <span>Admin Portal</span></div>
       <div class="header-actions">
@@ -237,47 +240,45 @@
   </div>
 
   <script>
- 
-   // ১. পাসওয়ার্ড সেট করুন
-const ADMIN_PASSWORD = "vupc_admin_2026"; 
+    // ১. আপনার অ্যাডমিন পাসওয়ার্ড
+    const ADMIN_PASSWORD = "vupc_admin_2026"; 
 
-// ২. পেজ লোড হওয়া মাত্রই ড্যাশবোর্ড হাইড করে লগইন বক্স বাধ্যতামূলক করা
-document.addEventListener("DOMContentLoaded", function() {
-  const loginView = document.getElementById("loginView");
-  const dashView = document.getElementById("dashView");
-  
-  if (dashView) dashView.style.display = "none";
-  if (loginView) loginView.style.display = "flex";
-});
+    // ২. পেজ লোড হওয়ার পর নিশ্চিত করা যে ড্যাশবোর্ড লুকানো আছে এবং লগইন পপ-আপ চালু আছে
+    document.addEventListener("DOMContentLoaded", function() {
+      const loginView = document.getElementById("loginView");
+      const dashView = document.getElementById("dashView");
+      
+      if (dashView) dashView.style.display = "none";
+      if (loginView) loginView.style.display = "flex";
+    });
 
-// ৩. পাসওয়ার্ড সঠিক হলে তবেই ড্যাশবোর্ড খুলবে এবং ডাটা আনবে
-function handleAdminLogin(event) {
-  if (event) event.preventDefault();
+    // ৩. পাসওয়ার্ড চেক ও ড্যাশবোর্ড আনলক করার ফাংশন
+    function handleAdminLogin(event) {
+      if (event) event.preventDefault();
 
-  const inputPass = document.getElementById("adminPassInput").value.trim();
-  const errorMsg = document.getElementById("loginErrorMsg");
+      const inputPass = document.getElementById("adminPassInput").value.trim();
+      const errorMsg = document.getElementById("loginErrorMsg");
 
-  if (inputPass === ADMIN_PASSWORD) {
-    document.getElementById("loginView").style.display = "none";
-    document.getElementById("dashView").style.display = "block";
-    
-    // পাসওয়ার্ড মেলার পর ডাটা ফায়ারবেস থেকে আসবে
-    if (typeof fetchLiveTeams === 'function') {
-      fetchLiveTeams();
+      if (inputPass === ADMIN_PASSWORD) {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("dashView").style.display = "block";
+        
+        // পাসওয়ার্ড সঠিক হলেই ফায়ারবেস থেকে ডাটা আনা শুরু হবে
+        fetchLiveTeams();
+      } else {
+        if (errorMsg) {
+          errorMsg.textContent = "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।";
+          errorMsg.style.display = "block";
+        } else {
+          alert("ভুল পাসওয়ার্ড!");
+        }
+      }
     }
-  } else {
-    if (errorMsg) {
-      errorMsg.textContent = "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।";
-      errorMsg.style.display = "block";
-    } else {
-      alert("ভুল পাসওয়ার্ড!");
-    }
-  }
-}
 
     const FIREBASE_BASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams';
     let teamsData = [];
 
+    // ফায়ারবেস থেকে লাইভ ডাটা আনা
     async function fetchLiveTeams() {
       try {
         const res = await fetch(`${FIREBASE_BASE_URL}.json`);
@@ -291,6 +292,7 @@ function handleAdminLogin(event) {
       }
     }
 
+    // টেবিল ও ড্যাশবোর্ড রেন্ডার করা
     function renderDashboard() {
       const totalTeams = teamsData.length;
       const activeCount = teamsData.filter(t => t.status === 'Active' || t.status === 'Verified').length;
@@ -335,7 +337,7 @@ function handleAdminLogin(event) {
       }).join("");
     }
 
-    // ১. স্ট্যাটাস অন/অফ (Active <-> Pending)
+    // স্ট্যাটাস টগল (Active <-> Pending)
     async function toggleVerification(teamId, currentStatus) {
       const newStatus = currentStatus === 'Active' ? 'Pending' : 'Active';
       try {
@@ -354,7 +356,7 @@ function handleAdminLogin(event) {
       }
     }
 
-    // ২. ডিটেইলস পপ-আপ
+    // টিম ডিটেইলস পপ-আপ
     function showTeamDetails(teamId) {
       const team = teamsData.find(t => t.id === teamId);
       if (!team) return;
@@ -403,7 +405,7 @@ function handleAdminLogin(event) {
       document.getElementById("detailsModal").classList.remove("show");
     }
 
-    // ৩. CSV এক্সপোর্ট ফাংশন
+    // CSV এক্সপোর্ট ফাংশন
     function exportToCSV() {
       if (teamsData.length === 0) {
         alert("No team data to export!");
@@ -432,9 +434,6 @@ function handleAdminLogin(event) {
       link.click();
       document.body.removeChild(link);
     }
-
-    // Auto Load Data
-   // fetchLiveTeams();
   </script>
 </body>
 </html>
