@@ -1,2 +1,3 @@
-# vupc-official-website
-Official frontend repository for Varendra University Programming Club (VUPC) featuring Code Harbor contests, semester bootcamps, mock tests, blog posts, official team registration, and the admin portal.
+# VUPC Official Website
+
+The official web platform for the Varendra University Programming Club (VUPC). This repository manages the frontend and backend services for contest announcements, registration panels, and event management.
