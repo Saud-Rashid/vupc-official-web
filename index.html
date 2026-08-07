@@ -1845,7 +1845,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
   ];
   const SEMESTERS = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
   const SIZES = ["S","M","L","XL","XXL"];
-  const PAY_METHODS = ["bKash","Nagad","Rocket","Bank Transfer"];
+  const PAY_METHODS = ["bKash","Nagad","Rocket"];
 
   function emptyMember(){ return {name:'', id:'', semester:'', mobile:'', email:'', size:''}; }
   const wizEmailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1857,6 +1857,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
       teamName: '',
       members: [emptyMember(), emptyMember(), emptyMember()],
       contact: '',
+      contactOtherName: '',
       payMethod: '',
       txnId: '',
       txnPhone: '',
@@ -1884,11 +1885,10 @@ Form your team, harness your technical prowess, and chart a path through high-st
     }
     if(stepIdx===2){
       if(!wiz.contact) e.contact='Pick a contact person.';
+      if(wiz.contact==='Other' && !wiz.contactOtherName.trim()) e.contactOtherName="Enter the payer's name.";
       if(!wiz.payMethod) e.payMethod='Required.';
-      if(wiz.payMethod!=='Bank Transfer'){
-        if(!wiz.txnId.trim()) e.txnId='Transaction ID required.';
-        if(!wizMobileRe.test(wiz.txnPhone.trim())) e.txnPhone='Valid 11-digit BD number needed.';
-      }
+      if(!wiz.txnId.trim()) e.txnId='Transaction ID required.';
+      if(!wizMobileRe.test(wiz.txnPhone.trim())) e.txnPhone='Valid 11-digit BD number needed.';
     }
     if(stepIdx===3){
       if(!wiz.agree) e.agree='Must confirm before submitting.';
@@ -1901,9 +1901,14 @@ Form your team, harness your technical prowess, and chart a path through high-st
     return [
       wiz.teamName.trim().length>0,
       wiz.members.every(m=>m.name && m.id && m.semester && wizMobileRe.test(m.mobile) && wizEmailRe.test(m.email) && m.size),
-      !!wiz.contact && !!wiz.payMethod && (wiz.payMethod==='Bank Transfer' || (wiz.txnId.trim() && wizMobileRe.test(wiz.txnPhone))),
+      !!wiz.contact && (wiz.contact!=='Other' || wiz.contactOtherName.trim().length>0) && !!wiz.payMethod && wiz.txnId.trim() && wizMobileRe.test(wiz.txnPhone),
       wiz.agree
     ];
+  }
+
+  function wizContactDisplay(){
+    if(wiz.contact==='Other') return wiz.contactOtherName.trim() || 'Other';
+    return wiz.contact;
   }
 
   function wizEscape(str){
@@ -2009,17 +2014,25 @@ Form your team, harness your technical prowess, and chart a path through high-st
               const active = wiz.contact===val;
               return `<button type="button" class="choice-btn ${active?'active':''}" data-contact="${val}">${wizEscape(label)}</button>`;
             }).join('')}
+            <button type="button" class="choice-btn ${wiz.contact==='Other'?'active':''}" data-contact="Other">Other</button>
           </div>
           <span class="error-msg">${wiz.errors.contact||''}</span>
-        </div>
-        <div class="field">
+        </div>`;
+      if(wiz.contact==='Other'){
+        html += `<div class="field ${wiz.errors.contactOtherName?'error':''}">
+          <label>Payer's Name <span class="req">*</span></label>
+          <input type="text" id="contactOtherNameInput" placeholder="Name of the person who paid" value="${wizEscape(wiz.contactOtherName)}">
+          <span class="error-msg">${wiz.errors.contactOtherName||''}</span>
+        </div>`;
+      }
+      html += `<div class="field">
           <label>Payment Method <span class="req">*</span></label>
           <div class="choice-row">
             ${PAY_METHODS.map(v=>`<button type="button" class="choice-btn ${wiz.payMethod===v?'active':''}" data-paymethod="${v}">${v}</button>`).join('')}
           </div>
           <span class="error-msg">${wiz.errors.payMethod||''}</span>
         </div>`;
-      if(wiz.payMethod && wiz.payMethod!=='Bank Transfer'){
+      if(wiz.payMethod){
         html += `<div class="trx-fields show" style="margin-bottom:0">
           <div class="trx-note">${wiz.payMethod} selected — please provide your transaction details.</div>
           <div class="field ${wiz.errors.txnId?'error':''}" style="margin-bottom:0">
@@ -2040,8 +2053,8 @@ Form your team, harness your technical prowess, and chart a path through high-st
       html += `<div class="summary-box">
           <div><b>Team:</b> ${wizEscape(wiz.teamName)||'—'}</div>
           <div><b>Members:</b> ${wiz.members.map(m=>wizEscape(m.name)).filter(Boolean).join(', ')||'—'}</div>
-          <div><b>Contact person:</b> ${wizEscape(wiz.contact)||'—'}</div>
-          <div><b>Payment:</b> ${wizEscape(wiz.payMethod)||'—'}${wiz.payMethod && wiz.payMethod!=='Bank Transfer' ? ' · TrxID ' + wizEscape(wiz.txnId) : ''}</div>
+          <div><b>Contact person:</b> ${wizEscape(wizContactDisplay())||'—'}</div>
+          <div><b>Payment:</b> ${wizEscape(wiz.payMethod)||'—'}${wiz.payMethod ? ' · TrxID ' + wizEscape(wiz.txnId) : ''}</div>
         </div>
         <label class="agree-row">
           <input type="checkbox" id="agreeInput" ${wiz.agree?'checked':''}>
@@ -2108,6 +2121,8 @@ Form your team, harness your technical prowess, and chart a path through high-st
         renderStepContent();
       });
     });
+    const contactOtherNameInput = document.getElementById('contactOtherNameInput');
+    if(contactOtherNameInput) contactOtherNameInput.addEventListener('input', e=>{ wiz.contactOtherName = e.target.value; });
     const txnIdInput = document.getElementById('txnIdInput');
     if(txnIdInput) txnIdInput.addEventListener('input', e=>{ wiz.txnId = e.target.value; });
     const txnPhoneInput = document.getElementById('txnPhoneInput');
@@ -2191,7 +2206,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
       createdAt: new Date().toISOString(),
       details: {
         membersFull: wiz.members,
-        contactPerson: wiz.contact
+        contactPerson: wizContactDisplay()
       }
     };
 
@@ -2219,7 +2234,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
         trxPhone: wiz.txnPhone.trim(),
         detail: {
           membersFull: wiz.members.map(m => ({...m})),
-          contact: wiz.contact,
+          contact: wizContactDisplay(),
         }
       };
 
@@ -2234,7 +2249,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
         id: saved.id || fallbackId,
         teamName: wiz.teamName.trim(),
         members: wiz.members.map(m => ({...m})),
-        contact: wiz.contact,
+        contact: wizContactDisplay(),
         payMethod: wiz.payMethod,
         txnId: wiz.txnId.trim(),
         txnPhone: wiz.txnPhone.trim(),
@@ -2287,9 +2302,6 @@ Form your team, harness your technical prowess, and chart a path through high-st
     doc.setFontSize(10);
     doc.setTextColor(80,80,80);
     doc.text(`Submitted: ${wizLastReceipt.timestamp.toLocaleString()}`, pageWidth - marginX - 16, y+22, {align:'right'});
-    doc.setTextColor(16,150,90);
-    doc.setFont('helvetica','bold');
-    doc.text('STATUS: ACCEPTED', pageWidth - marginX - 16, y+44, {align:'right'});
     y += 90;
 
     // Team name
@@ -2357,7 +2369,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
       ['Contact Person', wizLastReceipt.contact || '-'],
       ['Payment Method', wizLastReceipt.payMethod || '-'],
     ];
-    if(wizLastReceipt.payMethod && wizLastReceipt.payMethod !== 'Bank Transfer'){
+    if(wizLastReceipt.payMethod){
       rows.push([`Transaction ID`, wizLastReceipt.txnId || '-']);
       rows.push([`Sender Mobile`, wizLastReceipt.txnPhone || '-']);
     }
