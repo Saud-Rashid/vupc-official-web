@@ -237,6 +237,35 @@
   </div>
 
   <script>
+    const ADMIN_PASSWORD = "vupc_admin_2026"; // এখানে আপনার পাসওয়ার্ড দিন
+
+// পেজ লোড হলেই ড্যাশবোর্ড লুকিয়ে রাখবে
+document.addEventListener("DOMContentLoaded", function() {
+  const loginView = document.getElementById("loginView");
+  const dashView = document.getElementById("dashView");
+  
+  if (dashView) dashView.style.display = "none";
+  if (loginView) loginView.style.display = "flex";
+});
+
+// পাসওয়ার্ড ম্যাচ করানোর ফাংশন
+async function handleAdminLogin(event) {
+  if (event) event.preventDefault();
+
+  const inputPass = document.getElementById("adminPassInput").value.trim();
+  const errorMsg = document.getElementById("loginErrorMsg");
+
+  if (inputPass === ADMIN_PASSWORD) {
+    document.getElementById("loginView").style.display = "none";
+    document.getElementById("dashView").style.display = "block";
+    fetchLiveTeams(); // সঠিক পাসওয়ার্ড দিলেই ফায়ারবেস থেকে ডাটা আনবে
+  } else {
+    if (errorMsg) {
+      errorMsg.textContent = "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।";
+      errorMsg.style.display = "block";
+    }
+  }
+}
     const FIREBASE_BASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams';
     let teamsData = [];
 
@@ -396,7 +425,7 @@
     }
 
     // Auto Load Data
-    fetchLiveTeams();
+   // fetchLiveTeams();
   </script>
 </body>
 </html>
