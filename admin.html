@@ -237,9 +237,11 @@
   </div>
 
   <script>
-    const ADMIN_PASSWORD = "vupc_admin_2026"; // এখানে আপনার পাসওয়ার্ড দিন
+ 
+   // ১. পাসওয়ার্ড সেট করুন
+const ADMIN_PASSWORD = "vupc_admin_2026"; 
 
-// পেজ লোড হলেই ড্যাশবোর্ড লুকিয়ে রাখবে
+// ২. পেজ লোড হওয়া মাত্রই ড্যাশবোর্ড হাইড করে লগইন বক্স বাধ্যতামূলক করা
 document.addEventListener("DOMContentLoaded", function() {
   const loginView = document.getElementById("loginView");
   const dashView = document.getElementById("dashView");
@@ -248,8 +250,8 @@ document.addEventListener("DOMContentLoaded", function() {
   if (loginView) loginView.style.display = "flex";
 });
 
-// পাসওয়ার্ড ম্যাচ করানোর ফাংশন
-async function handleAdminLogin(event) {
+// ৩. পাসওয়ার্ড সঠিক হলে তবেই ড্যাশবোর্ড খুলবে এবং ডাটা আনবে
+function handleAdminLogin(event) {
   if (event) event.preventDefault();
 
   const inputPass = document.getElementById("adminPassInput").value.trim();
@@ -258,14 +260,21 @@ async function handleAdminLogin(event) {
   if (inputPass === ADMIN_PASSWORD) {
     document.getElementById("loginView").style.display = "none";
     document.getElementById("dashView").style.display = "block";
-    fetchLiveTeams(); // সঠিক পাসওয়ার্ড দিলেই ফায়ারবেস থেকে ডাটা আনবে
+    
+    // পাসওয়ার্ড মেলার পর ডাটা ফায়ারবেস থেকে আসবে
+    if (typeof fetchLiveTeams === 'function') {
+      fetchLiveTeams();
+    }
   } else {
     if (errorMsg) {
       errorMsg.textContent = "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।";
       errorMsg.style.display = "block";
+    } else {
+      alert("ভুল পাসওয়ার্ড!");
     }
   }
 }
+
     const FIREBASE_BASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams';
     let teamsData = [];
 
