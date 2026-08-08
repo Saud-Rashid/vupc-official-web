@@ -243,7 +243,7 @@
     font-weight:700;
     font-size:1.15rem;
   }
-  .brand-logo{height:34px;width:34px;object-fit:contain;flex:none;border-radius:8px;}
+  .brand-logo{height:52px;width:auto;object-fit:contain;flex:none;}
   .brand .dots{display:flex;gap:5px;}
   .brand .dots span{width:9px;height:9px;border-radius:50%;display:block;}
   .brand .dots span:nth-child(1){background:var(--red);}
@@ -823,6 +823,22 @@
     color:var(--magenta);
     margin-bottom:.2rem;
   }
+  .pay-number-box{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    gap:.7rem;
+    margin-bottom:1.2rem;
+    padding:1rem 1.1rem;
+    border:1px dashed rgba(224,79,224,0.35);
+    border-radius:var(--radius-sm);
+    background:rgba(224,79,224,0.05);
+  }
+  .pay-number-lbl{
+    font-size:.82rem;
+    color:var(--text-dim);
+    flex:1 1 200px;
+  }
+  .pay-number-row{display:flex;align-items:center;gap:.6rem;flex:none;}
+  .pay-number{font-family:var(--font-mono);font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:.02em;}
   .success-box{
     display:none;
     text-align:center;
@@ -1213,8 +1229,7 @@
   <nav class="nav">
     <div class="wrap">
       <a href="#home" class="brand" aria-label="VUPC Code Harbor — go to home">
-        <img src="assets/vupc-logo.png" alt="" class="brand-logo">
-        <span>VUPC<br><small>Code Harbor</small></span>
+        <img src="assets/vupc-logo.png" alt="VUPC Code Harbor" class="brand-logo">
       </a>
 
       <div class="nav-tabs" role="navigation" aria-label="Sections">
@@ -1846,6 +1861,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
   const SEMESTERS = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
   const SIZES = ["S","M","L","XL","XXL"];
   const PAY_METHODS = ["bKash","Nagad","Rocket"];
+  const PAY_NUMBER = "01XXXXXXXXX"; // TODO: replace with the real bKash/Nagad/Rocket personal number
 
   function emptyMember(){ return {name:'', id:'', semester:'', mobile:'', email:'', size:''}; }
   const wizEmailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1876,7 +1892,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
     if(stepIdx===1){
       wiz.members.forEach((m,i)=>{
         if(!m.name.trim()) e[`m${i}name`]='Required.';
-        if(!m.id.trim()) e[`m${i}id`]='Required.';
+        if(!/^\d{9}$/.test(m.id.trim())) e[`m${i}id`] = m.id.trim() ? '9-digit student ID required.' : 'Required.';
         if(!m.semester) e[`m${i}sem`]='Required.';
         if(!wizMobileRe.test(m.mobile.trim())) e[`m${i}mobile`]='Valid 11-digit BD number needed.';
         if(!wizEmailRe.test(m.email.trim())) e[`m${i}email`]='Valid email needed.';
@@ -1900,7 +1916,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
   function wizDoneSteps(){
     return [
       wiz.teamName.trim().length>0,
-      wiz.members.every(m=>m.name && m.id && m.semester && wizMobileRe.test(m.mobile) && wizEmailRe.test(m.email) && m.size),
+      wiz.members.every(m=>m.name && /^\d{9}$/.test(m.id) && m.semester && wizMobileRe.test(m.mobile) && wizEmailRe.test(m.email) && m.size),
       !!wiz.contact && (wiz.contact!=='Other' || wiz.contactOtherName.trim().length>0) && !!wiz.payMethod && wiz.txnId.trim() && wizMobileRe.test(wiz.txnPhone),
       wiz.agree
     ];
@@ -1971,7 +1987,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
             </div>
             <div class="field ${wiz.errors[`m${i}id`]?'error':''}">
               <label>Student ID <span class="req">*</span></label>
-              <input type="text" data-m="${i}" data-k="id" placeholder="e.g. 2103xxx" value="${wizEscape(m.id)}">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" data-m="${i}" data-k="id" placeholder="e.g. 210101234" value="${wizEscape(m.id)}">
               <span class="error-msg">${wiz.errors[`m${i}id`]||''}</span>
             </div>
             <div class="field ${wiz.errors[`m${i}sem`]?'error':''}">
@@ -2031,6 +2047,15 @@ Form your team, harness your technical prowess, and chart a path through high-st
             ${PAY_METHODS.map(v=>`<button type="button" class="choice-btn ${wiz.payMethod===v?'active':''}" data-paymethod="${v}">${v}</button>`).join('')}
           </div>
           <span class="error-msg">${wiz.errors.payMethod||''}</span>
+        </div>`;
+      html += `<div class="pay-number-box">
+          <div class="pay-number-lbl">Send the registration fee to this number — same number for bKash, Nagad &amp; Rocket (Personal)</div>
+          <div class="pay-number-row">
+            <span class="pay-number" id="payNumberText">${PAY_NUMBER}</span>
+            <button class="copy-btn" id="copyPayNumberBtn" type="button" aria-label="Copy payment number">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+            </button>
+          </div>
         </div>`;
       if(wiz.payMethod){
         html += `<div class="trx-fields show" style="margin-bottom:0">
@@ -2106,7 +2131,12 @@ Form your team, harness your technical prowess, and chart a path through high-st
     document.querySelectorAll('#stepContent [data-m]').forEach(el=>{
       const handler = e=>{
         const i = parseInt(el.dataset.m,10), k = el.dataset.k;
-        wiz.members[i][k] = e.target.value;
+        let val = e.target.value;
+        if(k==='id'){
+          val = val.replace(/\D/g,'').slice(0,9);
+          if(e.target.value !== val) e.target.value = val;
+        }
+        wiz.members[i][k] = val;
       };
       el.addEventListener('input', handler);
       el.addEventListener('change', handler);
@@ -2120,6 +2150,13 @@ Form your team, harness your technical prowess, and chart a path through high-st
         wiz.payMethod = btn.dataset.paymethod;
         renderStepContent();
       });
+    });
+    const copyPayNumberBtn = document.getElementById('copyPayNumberBtn');
+    if(copyPayNumberBtn) copyPayNumberBtn.addEventListener('click', ()=>{
+      navigator.clipboard?.writeText(PAY_NUMBER);
+      const original = copyPayNumberBtn.innerHTML;
+      copyPayNumberBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+      setTimeout(()=>{ copyPayNumberBtn.innerHTML = original; }, 1200);
     });
     const contactOtherNameInput = document.getElementById('contactOtherNameInput');
     if(contactOtherNameInput) contactOtherNameInput.addEventListener('input', e=>{ wiz.contactOtherName = e.target.value; });
