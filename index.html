@@ -1861,7 +1861,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
   const SEMESTERS = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
   const SIZES = ["S","M","L","XL","XXL"];
   const PAY_METHODS = ["bKash","Nagad","Rocket"];
-  const PAY_NUMBER = "01XXXXXXXXX"; // TODO: replace with the real bKash/Nagad/Rocket personal number
+  const PAY_NUMBER = "01723853678";
 
   function emptyMember(){ return {name:'', id:'', semester:'', mobile:'', email:'', size:''}; }
   const wizEmailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1987,7 +1987,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
             </div>
             <div class="field ${wiz.errors[`m${i}id`]?'error':''}">
               <label>Student ID <span class="req">*</span></label>
-              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" data-m="${i}" data-k="id" placeholder="e.g. 210101234" value="${wizEscape(m.id)}">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" data-m="${i}" data-k="id" placeholder="e.g. XXXXXXXXX" value="${wizEscape(m.id)}">
               <span class="error-msg">${wiz.errors[`m${i}id`]||''}</span>
             </div>
             <div class="field ${wiz.errors[`m${i}sem`]?'error':''}">
@@ -2037,7 +2037,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
       if(wiz.contact==='Other'){
         html += `<div class="field ${wiz.errors.contactOtherName?'error':''}">
           <label>Payer's Name <span class="req">*</span></label>
-          <input type="text" id="contactOtherNameInput" placeholder="Name of the person who paid" value="${wizEscape(wiz.contactOtherName)}">
+          <input type="text" id="contactOtherNameInput" placeholder="Payer name or Store name" value="${wizEscape(wiz.contactOtherName)}">
           <span class="error-msg">${wiz.errors.contactOtherName||''}</span>
         </div>`;
       }
@@ -2067,7 +2067,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
           </div>
           <div class="field ${wiz.errors.txnPhone?'error':''}" style="margin-bottom:0">
             <label>Sender Mobile Number <span class="req">*</span></label>
-            <input type="tel" id="txnPhoneInput" placeholder="01723853678" value="${wizEscape(wiz.txnPhone)}">
+            <input type="tel" id="txnPhoneInput" placeholder="01XXXXXXXXX" value="${wizEscape(wiz.txnPhone)}">
             <span class="error-msg">${wiz.errors.txnPhone||''}</span>
           </div>
         </div>`;
