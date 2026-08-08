@@ -243,7 +243,7 @@
     font-weight:700;
     font-size:1.15rem;
   }
-  .brand-logo{height:52px;width:auto;object-fit:contain;flex:none;}
+  .brand-logo{height: 35px;width:auto;object-fit:contain;flex:none;}
   .brand .dots{display:flex;gap:5px;}
   .brand .dots span{width:9px;height:9px;border-radius:50%;display:block;}
   .brand .dots span:nth-child(1){background:var(--red);}
@@ -380,7 +380,7 @@
     background:var(--border-bright);
   }
   .bs-logo-slot{
-    height:52px;
+    height:62px;
     width:104px;
     display:flex;
     align-items:center;
@@ -389,7 +389,7 @@
   }
   .bs-logo-slot img{
     max-height:100%;
-    max-width:100%;
+    max-width:70%;
     width:auto;
     height:auto;
     object-fit:contain;
@@ -460,7 +460,6 @@
     .sponsor-slot img{height:24px;}
     .sponsor-logo-chip{height:36px;}
     .sponsor-logo-chip img{max-width:100px;}
-    .brand-strip span.bs-label{display:none;}
     .bs-divider-v{display:none;}
   }
 
@@ -1186,6 +1185,7 @@
   @media (max-width:900px){
     .nav-tabs{display:none;}
     .burger{display:flex;}
+    .brand-logo{height:25px;}
     .hero-grid{grid-template-columns:1fr;}
     .grid-2, .grid-2.grid-2--dual{grid-template-columns:1fr;}
     .field-grid, .field-grid.three{grid-template-columns:1fr;}
@@ -1987,7 +1987,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
             </div>
             <div class="field ${wiz.errors[`m${i}id`]?'error':''}">
               <label>Student ID <span class="req">*</span></label>
-              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" data-m="${i}" data-k="id" placeholder="e.g. XXXXXXXXX" value="${wizEscape(m.id)}">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" data-m="${i}" data-k="id" placeholder="e.g. 210101234" value="${wizEscape(m.id)}">
               <span class="error-msg">${wiz.errors[`m${i}id`]||''}</span>
             </div>
             <div class="field ${wiz.errors[`m${i}sem`]?'error':''}">
@@ -2037,7 +2037,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
       if(wiz.contact==='Other'){
         html += `<div class="field ${wiz.errors.contactOtherName?'error':''}">
           <label>Payer's Name <span class="req">*</span></label>
-          <input type="text" id="contactOtherNameInput" placeholder="Payer name or Store name" value="${wizEscape(wiz.contactOtherName)}">
+          <input type="text" id="contactOtherNameInput" placeholder="Name of the person who paid" value="${wizEscape(wiz.contactOtherName)}">
           <span class="error-msg">${wiz.errors.contactOtherName||''}</span>
         </div>`;
       }
