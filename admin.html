@@ -242,6 +242,19 @@
   </div>
 
   <script>
+    // 🔥 EMERGENCY PRESENTATION BYPASS
+(function checkBypass() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('bypass') === 'true') {
+    document.addEventListener("DOMContentLoaded", function() {
+      const loginView = document.getElementById("loginView");
+      const dashView = document.getElementById("dashView");
+      if (loginView) loginView.style.display = "none";
+      if (dashView) dashView.style.display = "block";
+      fetchLiveTeams();
+    });
+  }
+})();
     // ১. পেজ লোড হলে ড্যাশবোর্ড লুকিয়ে রাখা
     document.addEventListener("DOMContentLoaded", function() {
       const loginView = document.getElementById("loginView");
