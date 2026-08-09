@@ -185,7 +185,9 @@
       <p style="color: #9b93ae; font-size: 0.85rem; margin-bottom: 1.5rem;">Enter security password to access dashboard</p>
       
       <form onsubmit="handleAdminLogin(event)">
-        <input type="password" id="adminPassInput" placeholder="Enter Password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-family: monospace; font-size: 1rem; margin-bottom: 1rem; outline: none;">
+        <input type="email" id="adminEmailInput" placeholder="Enter Admin Email" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.9rem; margin-bottom: 0.8rem; outline: none;">
+        
+        <input type="password" id="adminPassInput" placeholder="Enter Password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.9rem; margin-bottom: 1rem; outline: none;">
         
         <p id="loginErrorMsg" style="color: #ff4d4d; font-size: 0.85rem; display: none; margin-bottom: 1rem;"></p>
         
@@ -240,10 +242,7 @@
   </div>
 
   <script>
-    // ১. আপনার অ্যাডমিন পাসওয়ার্ড
-    const ADMIN_PASSWORD = "vupc_admin_2026"; 
-
-    // ২. পেজ লোড হওয়ার পর নিশ্চিত করা যে ড্যাশবোর্ড লুকানো আছে এবং লগইন পপ-আপ চালু আছে
+    // ১. পেজ লোড হলে ড্যাশবোর্ড লুকিয়ে রাখা
     document.addEventListener("DOMContentLoaded", function() {
       const loginView = document.getElementById("loginView");
       const dashView = document.getElementById("dashView");
@@ -252,25 +251,41 @@
       if (loginView) loginView.style.display = "flex";
     });
 
-    // ৩. পাসওয়ার্ড চেক ও ড্যাশবোর্ড আনলক করার ফাংশন
-    function handleAdminLogin(event) {
+    // ২. ব্যাকএন্ডের সিকিউর API-তে হিট পাঠিয়ে লগইন ভ্যালিডেশন
+    async function handleAdminLogin(event) {
       if (event) event.preventDefault();
 
-      const inputPass = document.getElementById("adminPassInput").value.trim();
+      const email = document.getElementById("adminEmailInput").value.trim();
+      const password = document.getElementById("adminPassInput").value.trim();
       const errorMsg = document.getElementById("loginErrorMsg");
 
-      if (inputPass === ADMIN_PASSWORD) {
-        document.getElementById("loginView").style.display = "none";
-        document.getElementById("dashView").style.display = "block";
-        
-        // পাসওয়ার্ড সঠিক হলেই ফায়ারবেস থেকে ডাটা আনা শুরু হবে
-        fetchLiveTeams();
-      } else {
-        if (errorMsg) {
-          errorMsg.textContent = "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।";
-          errorMsg.style.display = "block";
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          // সিকিউর টোকেন ব্রাউজারে সেভ রাখা
+          localStorage.setItem('adminToken', data.token);
+          
+          document.getElementById("loginView").style.display = "none";
+          document.getElementById("dashView").style.display = "block";
+          
+          fetchLiveTeams();
         } else {
-          alert("ভুল পাসওয়ার্ড!");
+          if (errorMsg) {
+            errorMsg.textContent = data.message || "wrong password or email. Please try again.";
+            errorMsg.style.display = "block";
+          }
+        }
+      } catch (err) {
+        if (errorMsg) {
+          errorMsg.textContent = "can't connect to server. Please try again later.";
+          errorMsg.style.display = "block";
         }
       }
     }
