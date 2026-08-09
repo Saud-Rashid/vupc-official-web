@@ -105,6 +105,12 @@ const registrationLimiter = rateLimit({
 
 class ValidationError extends Error {}
 
+// This does not depend on Firebase, so it distinguishes a routing/runtime
+// problem from a database configuration problem in production.
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ ok: true, databaseReady: Boolean(db) });
+});
+
 function readText(value, maxLength, fieldName) {
   if (typeof value !== 'string') throw new ValidationError(`${fieldName} is required.`);
   const text = value.trim();

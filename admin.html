@@ -278,7 +278,13 @@
           body: JSON.stringify({ email, password })
         });
 
-        const data = await res.json();
+        const responseText = await res.text();
+        let data = {};
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          throw new Error(`The server returned HTTP ${res.status}.`);
+        }
 
         if (res.ok && data.success) {
           // সিকিউর টোকেন ব্রাউজারে সেভ রাখা
@@ -296,7 +302,7 @@
         }
       } catch (err) {
         if (errorMsg) {
-          errorMsg.textContent = "can't connect to server. Please try again later.";
+          errorMsg.textContent = err.message || "Can't connect to the server. Please try again later.";
           errorMsg.style.display = "block";
         }
       }

@@ -10,6 +10,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@firebase/app": "^0.14.6",
     "bcryptjs": "^3.0.3",
