@@ -15,8 +15,18 @@ let db = null;
 try {
   let serviceAccount;
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    // Vercel/deployed environment: env variable থেকে নেওয়া
+    // Option A: পুরো service account JSON একটাই env variable-এ রাখা
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    // Option B: PROJECT_ID / CLIENT_EMAIL / PRIVATE_KEY আলাদা আলাদা env variable
+    // হিসেবে রাখা (তোমার বর্তমান Vercel সেটআপ)। PRIVATE_KEY-তে সাধারণত
+    // literal "\n" থাকে যেটাকে আসল newline-এ কনভার্ট করতে হয়, নইলে
+    // Firebase invalid PEM error দেয়।
+    serviceAccount = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    };
   } else {
     // Local development: ফাইল থেকে নেওয়া
     serviceAccount = require('./firebase-key.json');
@@ -44,6 +54,9 @@ console.log("=== ENV CHECK ===");
 console.log("ALLOWED_ADMINS set:", !!process.env.ALLOWED_ADMINS, "| value:", process.env.ALLOWED_ADMINS || "(missing)");
 console.log("ADMIN_PASSWORD_HASH set:", !!process.env.ADMIN_PASSWORD_HASH, "| length:", (process.env.ADMIN_PASSWORD_HASH || '').length);
 console.log("JWT_SECRET set:", !!process.env.JWT_SECRET);
+console.log("FIREBASE_SERVICE_ACCOUNT set:", !!process.env.FIREBASE_SERVICE_ACCOUNT);
+console.log("FIREBASE_PROJECT_ID/CLIENT_EMAIL/PRIVATE_KEY set:",
+  !!process.env.FIREBASE_PROJECT_ID, !!process.env.FIREBASE_CLIENT_EMAIL, !!process.env.FIREBASE_PRIVATE_KEY);
 console.log("==================");
 
 // db initialize না হলে (Firebase env var missing/ভুল থাকলে) সংশ্লিষ্ট রুটগুলো
