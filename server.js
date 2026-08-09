@@ -34,6 +34,18 @@ try {
   console.error("Firebase Admin init failed:", error.message);
 }
 
+// ------------------------------------------------------------------
+// স্টার্টআপ ডায়াগনস্টিকস: গুরুত্বপূর্ণ env variable গুলো আদৌ সেট আছে কিনা
+// এবং length কত (পাসওয়ার্ড হ্যাশের আসল ভ্যালু কখনো লগ হয় না, শুধু আছে/নেই +
+// length দেখানো হয়) — Vercel Function Logs-এ গিয়ে এটা দেখলেই বোঝা যাবে
+// env variable ঠিকমতো পৌঁছেছে কিনা, নাকি ফাঁকা/মিসিং।
+// ------------------------------------------------------------------
+console.log("=== ENV CHECK ===");
+console.log("ALLOWED_ADMINS set:", !!process.env.ALLOWED_ADMINS, "| value:", process.env.ALLOWED_ADMINS || "(missing)");
+console.log("ADMIN_PASSWORD_HASH set:", !!process.env.ADMIN_PASSWORD_HASH, "| length:", (process.env.ADMIN_PASSWORD_HASH || '').length);
+console.log("JWT_SECRET set:", !!process.env.JWT_SECRET);
+console.log("==================");
+
 // db initialize না হলে (Firebase env var missing/ভুল থাকলে) সংশ্লিষ্ট রুটগুলো
 // পরিষ্কার 503 error দেবে, পুরো function crash করবে না
 function requireDb(req, res, next) {
@@ -90,19 +102,35 @@ app.post('/api/register', requireDb, async (req, res) => {
 
 // ৪. অ্যাডমিন লগইন রুট (Secure) — ডাটাবেজের দরকার নেই, তাই requireDb লাগেনি
 app.post('/api/admin/login', async (req, res) => {
-  const { email, password } = req.body;
-  const allowedAdmins = (process.env.ALLOWED_ADMINS || '').split(',');
+  const email = (req.body.email || '').trim().toLowerCase();
+  const password = req.body.password || '';
+
+  // ALLOWED_ADMINS-এ কমা দিয়ে আলাদা করা প্রতিটা ইমেইলকে trim + lowercase
+  // করা হচ্ছে, যাতে "a@x.com, b@x.com" এর মতো stray space বা case ভিন্নতার
+  // কারণে সঠিক ইমেইলও ভুলভাবে reject না হয়।
+  const allowedAdmins = (process.env.ALLOWED_ADMINS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
 
   // ১. ইমেইল অনুমোদিত কি না চেক
   if (!allowedAdmins.includes(email)) {
+    console.log("Login blocked - email not in ALLOWED_ADMINS:", email);
     return res.status(401).json({ success: false, message: "অনুমোদিত ইমেইল নয়!" });
   }
 
   try {
     // ২. .env এর HASH এর সাথে পাসওয়ার্ড ম্যাচ করা
-    const isMatch = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH || '');
+    const storedHash = process.env.ADMIN_PASSWORD_HASH || '';
+    if (!storedHash) {
+      console.error("ADMIN_PASSWORD_HASH env variable is missing/empty!");
+      return res.status(500).json({ success: false, message: "সার্ভার কনফিগারেশন ত্রুটি: পাসওয়ার্ড হ্যাশ সেট করা নেই।" });
+    }
+
+    const isMatch = await bcrypt.compare(password, storedHash);
 
     if (!isMatch) {
+      console.log("Login blocked - password did not match stored hash for:", email);
       return res.status(401).json({ success: false, message: "ভুল পাসওয়ার্ড!" });
     }
 
