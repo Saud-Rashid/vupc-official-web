@@ -3,7 +3,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
-const admin = require('firebase-admin');
+const { cert, getApps, initializeApp } = require('firebase-admin/app');
+const { getDatabase } = require('firebase-admin/database');
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -15,6 +16,20 @@ app.use(express.json());
 // যাতে init fail করলেও পুরো সার্ভার crash না করে।
 // ---------------------------------------------------------------
 let db = null;
+
+// A private key copied from a JSON/config file can accidentally retain its
+// wrapping quote and trailing comma in a .env value. Firebase expects the PEM
+// text only, so normalize that common format before creating the credential.
+function normalizePrivateKey(value) {
+  let key = String(value || '').trim();
+
+  if (key.startsWith('"') || key.startsWith("'")) {
+    const quote = key[0];
+    key = key.slice(1).replace(new RegExp(`${quote}?\\s*,?\\s*$`), '');
+  }
+
+  return key.replace(/\\n/g, '\n');
+}
 
 try {
   let serviceAccount;
@@ -28,21 +43,21 @@ try {
     serviceAccount = {
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+      privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY)
     };
   } else {
     // Local development fallback: ফাইল থেকে নেওয়া
     serviceAccount = require('./firebase-key.json');
   }
 
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+  if (!getApps().length) {
+    initializeApp({
+      credential: cert(serviceAccount),
       databaseURL: process.env.FIREBASE_DATABASE_URL || "https://vupc-official-web-default-rtdb.firebaseio.com"
     });
   }
 
-  db = admin.database();
+  db = getDatabase();
   console.log("Firebase Admin Initialized!");
 } catch (error) {
   console.error("Firebase Admin init failed:", error.message);
