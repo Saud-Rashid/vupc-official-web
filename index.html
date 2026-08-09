@@ -2220,12 +2220,11 @@ Form your team, harness your technical prowess, and chart a path through high-st
     scrollWizardToTop();
   });
 
-  function submitWizard(){
+  async function submitWizard(){
     const btn = document.getElementById('nextBtn');
     btn.disabled = true;
     btn.innerHTML = 'Submitting…';
 
-    const fallbackId = 'VUPC_CH26-' + Math.random().toString(36).slice(2,7).toUpperCase();
     const contactIdx = parseInt((wiz.contact || '1').replace('Member ',''), 10) - 1;
     const contactMember = wiz.members[contactIdx] || wiz.members[0] || {};
 
@@ -2248,20 +2247,27 @@ Form your team, harness your technical prowess, and chart a path through high-st
     };
 
     // ২. সরাসরি Firebase Realtime Database-এ POST
-    fetch("https://vupc-official-web-default-rtdb.firebaseio.com/teams.json", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(firebasePayload)
-    })
-    .then(res => {
-      if (!res.ok) console.error("Firebase response error:", res.status);
-    })
-    .catch(err => console.error("Firebase network error:", err));
+    let registration;
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(firebasePayload)
+      });
+      registration = await res.json().catch(() => ({}));
+      if (!res.ok || !registration.success || !registration.id) {
+        throw new Error(registration.error || 'Unable to save registration.');
+      }
+    } catch (err) {
+      console.error('Registration submission error:', err);
+      alert(err.message || 'Unable to submit registration. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = 'Submit Registration';
+      return;
+    }
 
     // ৩. পূর্বের PDF ডাউনলোড ও Success Modal লজিক
-    setTimeout(() => {
+    {
       const record = {
         teamName: wiz.teamName.trim(),
         email: contactMember.email || '',
@@ -2275,15 +2281,10 @@ Form your team, harness your technical prowess, and chart a path through high-st
         }
       };
 
-      let saved = record;
-      if (typeof CH_DB !== 'undefined') {
-        saved = CH_DB.addTeam(record);
-      } else {
-        saved = Object.assign({ id: fallbackId, registeredAt: new Date().toISOString() }, record);
-      }
+      const saved = Object.assign({ id: registration.id, registeredAt: new Date().toISOString() }, record);
 
       wizLastReceipt = {
-        id: saved.id || fallbackId,
+        id: saved.id,
         teamName: wiz.teamName.trim(),
         members: wiz.members.map(m => ({...m})),
         contact: wizContactDisplay(),
@@ -2299,7 +2300,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
 
       downloadReceiptPdf();
       btn.disabled = false;
-    }, 700);
+    }
   }
 
   function downloadReceiptPdf(){

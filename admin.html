@@ -268,7 +268,7 @@
       if (event) event.preventDefault();
 
       const email = document.getElementById("adminEmailInput").value.trim();
-      const password = document.getElementById("adminPassInput").value.trim();
+      const password = document.getElementById("adminPassInput").value;
       const errorMsg = document.getElementById("loginErrorMsg");
 
       try {
@@ -302,17 +302,28 @@
       }
     }
 
-    const FIREBASE_BASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams';
     let teamsData = [];
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[char]));
+    }
 
     // ফায়ারবেস থেকে লাইভ ডাটা আনা
     async function fetchLiveTeams() {
       try {
-        const res = await fetch(`${FIREBASE_BASE_URL}.json`);
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/teams', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (res.ok) {
-          const data = await res.json();
-          teamsData = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+          teamsData = await res.json();
           renderDashboard();
+        } else if (res.status === 401) {
+          localStorage.removeItem('adminToken');
+          document.getElementById("dashView").style.display = "none";
+          document.getElementById("loginView").style.display = "flex";
         }
       } catch (err) {
         console.error("Firebase fetch error:", err);
@@ -344,11 +355,11 @@
         
         return `
           <tr>
-            <td><strong>${t.name || t.teamName || 'N/A'}</strong></td>
-            <td>${t.email || t.contactEmail || 'N/A'}</td>
-            <td>${t.members ? (typeof t.members === 'string' ? t.members : '3 Members') : '3 Members'}</td>
-            <td>${t.gateway || 'bKash'}</td>
-            <td>${t.trx || t.trxId || 'N/A'}</td>
+            <td><strong>${escapeHtml(t.name || t.teamName || 'N/A')}</strong></td>
+            <td>${escapeHtml(t.email || t.contactEmail || 'N/A')}</td>
+            <td>${escapeHtml(t.members ? (typeof t.members === 'string' ? t.members : '3 Members') : '3 Members')}</td>
+            <td>${escapeHtml(t.gateway || 'bKash')}</td>
+            <td>${escapeHtml(t.trx || t.trxId || 'N/A')}</td>
             <td>
               <span onclick="toggleVerification('${t.id}', '${statusText}')" class="badge-status ${statusClass}" title="Click to toggle status">
                 ${statusText}
@@ -368,9 +379,13 @@
     async function toggleVerification(teamId, currentStatus) {
       const newStatus = currentStatus === 'Active' ? 'Pending' : 'Active';
       try {
-        const res = await fetch(`${FIREBASE_BASE_URL}/${teamId}.json`, {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch(`/api/admin/teams/${encodeURIComponent(teamId)}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
           body: JSON.stringify({ status: newStatus })
         });
         if (res.ok) {
@@ -387,6 +402,7 @@
     function showTeamDetails(teamId) {
       const team = teamsData.find(t => t.id === teamId);
       if (!team) return;
+      const safe = value => escapeHtml(value || 'N/A');
 
       document.getElementById("modalTeamName").textContent = team.name || team.teamName || "Team Details";
       
@@ -399,27 +415,27 @@
           <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:0.9rem; border-radius:10px; margin-bottom:0.7rem;">
             <div style="color:var(--amber); font-family:var(--font-mono); font-size:0.75rem; font-weight:bold; margin-bottom:0.4rem;">MEMBER ${i + 1}</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem; font-size:0.85rem; color:var(--text-dim);">
-              <div><strong style="color:var(--text)">Name:</strong> ${m.name || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Student ID:</strong> ${m.id || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Semester:</strong> ${m.semester || 'N/A'}</div>
-              <div><strong style="color:var(--text)">T-Shirt Size:</strong> ${m.size || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Mobile:</strong> ${m.mobile || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Email:</strong> ${m.email || 'N/A'}</div>
+              <div><strong style="color:var(--text)">Name:</strong> ${safe(m.name)}</div>
+              <div><strong style="color:var(--text)">Student ID:</strong> ${safe(m.id)}</div>
+              <div><strong style="color:var(--text)">Semester:</strong> ${safe(m.semester)}</div>
+              <div><strong style="color:var(--text)">T-Shirt Size:</strong> ${safe(m.size)}</div>
+              <div><strong style="color:var(--text)">Mobile:</strong> ${safe(m.mobile)}</div>
+              <div><strong style="color:var(--text)">Email:</strong> ${safe(m.email)}</div>
             </div>
           </div>
         `).join('');
       } else {
-        membersHtml = `<p style="color:var(--text-dim);">Summary: ${team.members || 'N/A'}</p>`;
+        membersHtml = `<p style="color:var(--text-dim);">Summary: ${safe(team.members)}</p>`;
       }
 
       const modalBody = document.getElementById("modalBodyContent");
       modalBody.innerHTML = `
         <div style="margin-bottom:1.2rem; background:rgba(124,92,245,0.1); border:1px solid rgba(124,92,245,0.3); padding:1rem; border-radius:10px; font-size:0.88rem;">
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Person:</strong> ${details.contactPerson || details.contact || 'N/A'}</div>
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Phone:</strong> ${team.contactPhone || team.trxPhone || 'N/A'}</div>
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Payment Method:</strong> ${team.gateway || 'N/A'}</div>
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Transaction ID:</strong> ${team.trx || team.trxId || 'N/A'}</div>
-          <div><strong style="color:var(--text)">Registration Time:</strong> ${team.createdAt ? new Date(team.createdAt).toLocaleString() : 'N/A'}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Person:</strong> ${safe(details.contactPerson || details.contact)}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Phone:</strong> ${safe(team.contactPhone || team.trxPhone)}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Payment Method:</strong> ${safe(team.gateway)}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Transaction ID:</strong> ${safe(team.trx || team.trxId)}</div>
+          <div><strong style="color:var(--text)">Registration Time:</strong> ${safe(team.createdAt ? new Date(team.createdAt).toLocaleString() : 'N/A')}</div>
         </div>
         <h4 style="font-size:0.95rem; font-family:var(--font-mono); margin-bottom:0.7rem; color:var(--cyan); text-transform:uppercase;">Full Member Information:</h4>
         ${membersHtml}
