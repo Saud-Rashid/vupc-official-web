@@ -296,7 +296,7 @@
           fetchLiveTeams();
         } else {
           if (errorMsg) {
-            errorMsg.textContent = data.message || "wrong password or email. Please try again.";
+            errorMsg.textContent = data.message || data.error || "Admin login failed. Please try again.";
             errorMsg.style.display = "block";
           }
         }
