@@ -151,7 +151,7 @@ app.post('/api/register', requireDb, async (req, res) => {
 
     res.json({ success: true, id: newTeamRef.key, message: 'Registration successful!' });
   } catch (err) {
-    console.error('Registration error:', err);
+    console.error('Registration error:', err); 
     res.status(500).json({ error: 'Failed to save registration' });
   }
 });
