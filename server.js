@@ -201,7 +201,7 @@ function validateRegistration(body) {
     gateway,
     trx,
     trxPhone,
-    status: 'Active',
+    status: 'Pending',
     createdAt: Date.now(),
     details: { membersFull, contactPerson }
   };
