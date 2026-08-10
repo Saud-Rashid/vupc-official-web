@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const helmet = require('helmet');
@@ -13,9 +14,31 @@ const app = express();
 // CSP remains disabled because the current pages use inline CSS and scripts.
 // Other Helmet protections are enabled without changing the existing UI.
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+
+// CORS was listed as a dependency but never wired in — this is required if
+// admin.html is ever served from a different origin than the API (e.g. a
+// separate static host, or opening the file directly). Same-origin requests
+// (the normal Vercel setup) are unaffected.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Allow same-origin / non-browser requests (no Origin header) and any
+    // origin explicitly whitelisted via ALLOWED_ORIGINS in the environment.
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  }
+}));
+
 app.use(express.json({ limit: '100kb' }));
 
 let db = null;
+let firebaseInitError = null;
 
 function normalizePrivateKey(value) {
   let key = String(value || '').trim();
@@ -37,6 +60,10 @@ try {
       privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY)
     };
   } else {
+    // Local-only fallback for development. In production this file should
+    // not exist — all credentials must come from environment variables
+    // (see .env.example). Keeping this out of git is not enough on its
+    // own; Vercel project env vars must be set in the dashboard too.
     serviceAccount = require('./firebase-key.json');
   }
 
@@ -49,6 +76,7 @@ try {
   db = getDatabase();
   console.log('Firebase Admin Initialized');
 } catch (error) {
+  firebaseInitError = error.message;
   console.error('Firebase Admin initialization failed:', error.message);
 }
 
@@ -106,9 +134,22 @@ const registrationLimiter = rateLimit({
 class ValidationError extends Error {}
 
 // This does not depend on Firebase, so it distinguishes a routing/runtime
-// problem from a database configuration problem in production.
+// problem from a database configuration problem in production. Also now
+// reports which admin-auth env vars are missing (without leaking values)
+// so a broken deploy is diagnosable from the browser instead of guessing.
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ ok: true, databaseReady: Boolean(db) });
+  const missingEnv = [
+    !process.env.JWT_SECRET && 'JWT_SECRET',
+    !process.env.ALLOWED_ADMINS && 'ALLOWED_ADMINS',
+    !process.env.ADMIN_PASSWORD_HASH && 'ADMIN_PASSWORD_HASH'
+  ].filter(Boolean);
+
+  res.status(200).json({
+    ok: true,
+    databaseReady: Boolean(db),
+    firebaseInitError: db ? null : firebaseInitError,
+    missingAdminEnv: missingEnv
+  });
 });
 
 function readText(value, maxLength, fieldName) {
@@ -174,8 +215,11 @@ app.post('/api/admin/login', loginLimiter, async (req, res) => {
   const secret = getJwtSecret();
 
   if (!allowedAdmins.length || !storedHash || !secret) {
-    console.error('Admin authentication configuration is incomplete.');
-    return res.status(503).json({ success: false, message: 'Admin login is temporarily unavailable.' });
+    // This is the #1 cause of "login doesn't work" on a fresh deploy:
+    // the env vars exist in your local .env but were never added to the
+    // Vercel project's Environment Variables settings.
+    console.error('Admin authentication configuration is incomplete. Check ALLOWED_ADMINS, ADMIN_PASSWORD_HASH, JWT_SECRET in your deployment environment variables.');
+    return res.status(503).json({ success: false, message: 'Admin login is temporarily unavailable. (Server env vars not configured.)' });
   }
   if (!allowedAdmins.includes(email) || !(await bcrypt.compare(password, storedHash))) {
     return res.status(401).json({ success: false, message: 'Invalid email or password.' });
