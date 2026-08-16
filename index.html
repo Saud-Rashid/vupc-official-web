@@ -373,6 +373,13 @@
     row-gap:.6rem;
     column-gap:1.4rem;
   }
+  .bs-logos{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:nowrap;
+    column-gap:1.4rem;
+  }
   .bs-divider-v{
     width:1px;
     align-self:stretch;
@@ -455,12 +462,15 @@
   }
   @media (max-width:640px){
     .brand-strip{column-gap:.8rem;padding:.75rem 14px;}
-    .bs-logo-slot{height:34px;width:72px;}
+    .bs-group{column-gap:.6rem;}
+    .bs-logos{column-gap:.7rem;}
+    .bs-logo-slot{height:32px;width:60px;}
     .sponsor-slot{height:34px;padding:0 .7rem;}
     .sponsor-slot img{height:24px;}
     .sponsor-logo-chip{height:36px;}
     .sponsor-logo-chip img{max-width:100px;}
     .bs-divider-v{display:none;}
+    .bs-sep{display:none;}
   }
 
   /* ============ HERO SPONSOR STRIP (under theme line) ============ */
@@ -1268,14 +1278,13 @@
     <div class="bs-group">
       <span class="bs-label">organized by</span>
 
-      <div class="bs-logo-slot"><img src="assets/vupc-logo.png" alt="VUPC — Varendra University Programming Club logo"></div>
-
-      <div class="bs-sep"></div>
-
-      <div class="bs-logo-slot"><img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo"></div>
-      <div class="bs-sep"></div>
-      <div class="bs-logo-slot"><img src="assets/amc_logo.png" alt="Department of CSE, Varendra University logo"></div>
-
+      <div class="bs-logos">
+        <div class="bs-logo-slot"><img src="assets/vupc-logo.png" alt="VUPC — Varendra University Programming Club logo"></div>
+        <div class="bs-sep"></div>
+        <div class="bs-logo-slot"><img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo"></div>
+        <div class="bs-sep"></div>
+        <div class="bs-logo-slot"><img src="assets/amc_logo.png" alt="Department of CSE, Varendra University logo"></div>
+      </div>
 
     </div>
   </div>
