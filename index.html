@@ -555,6 +555,35 @@
     0%,100%{opacity:1;}
     50%{opacity:.35;}
   }
+  /* ============ HERO PRESENTS ROW ============ */
+  .hero-presents{
+    display:flex;
+    align-items:center;
+    gap:.65rem;
+    margin-bottom:1.4rem;
+    flex-wrap:wrap;
+  }
+  .hero-presents-logo{
+    height: 90px;
+    width:auto;
+    max-width:150px;
+    object-fit:contain;
+  }
+  .hero-presents-x{
+    font-family:var(--font-mono);
+    color:var(--text-faint);
+    font-size:.85rem;
+  }
+  .hero-presents-text{
+    font-family:var(--font-mono);
+    font-size:.8rem;
+    color:var(--text-dim);
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  @media (max-width:520px){
+    .hero-presents-logo{height:40px;max-width:120px;}
+  }
   .hero h1{
     font-family:var(--font-display);
     font-weight:700;
@@ -1280,6 +1309,12 @@
     <div class="wrap hero-grid">
       <div>
         <div class="badge"><span class="pulse"></span> Season 5 is here</div>
+
+        <div class="hero-presents">
+          <img src="assets/amc_logo.png" alt="Department of CSE, Varendra University logo" class="hero-presents-logo">
+          <span class="hero-presents-text">presents</span>
+        </div>
+
         <h1>CODE <span class="grad-text">HARBOR</span></h1>
         <div class="theme-line">Navigating Challenges — Season 5</div>
 
