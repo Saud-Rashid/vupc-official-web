@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
   <style>
     :root {
       --bg: #0a0714;
@@ -24,7 +25,7 @@
       --font-body: 'Inter', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
-
+ 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg);
@@ -33,9 +34,9 @@
       min-height: 100vh;
       padding: 2rem 1rem;
     }
-
+ 
     .container { max-width: 1100px; margin: 0 auto; width: 100%; }
-
+ 
     .header {
       display: flex;
       justify-content: space-between;
@@ -48,9 +49,9 @@
     }
     .brand { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; }
     .brand span { color: var(--magenta); }
-
+ 
     .header-actions { display: flex; gap: 0.8rem; }
-
+ 
     .btn-action {
       font-family: var(--font-mono);
       font-size: 0.82rem;
@@ -66,7 +67,7 @@
     .btn-action:hover { background: rgba(255,255,255,0.08); border-color: var(--cyan); }
     .btn-csv { background: rgba(52, 211, 153, 0.12); color: var(--green); border-color: rgba(52, 211, 153, 0.3); }
     .btn-csv:hover { background: rgba(52, 211, 153, 0.25); }
-
+ 
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -81,7 +82,42 @@
     }
     .stat-card b { display: block; font-family: var(--font-mono); font-size: 1.8rem; color: var(--cyan); }
     .stat-card span { font-size: 0.8rem; color: var(--text-faint); text-transform: uppercase; font-family: var(--font-mono); }
-
+ 
+    .search-bar {
+      position: relative;
+      margin-bottom: 1.2rem;
+    }
+    .search-bar input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.6rem;
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .search-bar input::placeholder { color: var(--text-faint); }
+    .search-bar input:focus { border-color: var(--cyan); background: rgba(34, 211, 238, 0.05); }
+    .search-bar::before {
+      content: "🔍";
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .search-meta {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-faint);
+      margin-top: 0.5rem;
+    }
+ 
     .table-card {
       background: rgba(16, 13, 28, 0.6);
       border: 1px solid var(--border);
@@ -102,7 +138,7 @@
     td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); color: var(--text-dim); }
     tr:hover td { background: rgba(255, 255, 255, 0.02); }
     td strong { color: var(--text); font-weight: 600; }
-
+ 
     .badge-status {
       display: inline-block;
       padding: 0.3rem 0.7rem;
@@ -117,7 +153,7 @@
     .badge-status.active { background: rgba(52, 211, 153, 0.15); color: var(--green); border: 1px solid rgba(52, 211, 153, 0.3); }
     .badge-status.pending { background: rgba(251, 191, 36, 0.15); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.3); }
     .badge-status:hover { transform: scale(1.05); }
-
+ 
     .btn-details {
       background: rgba(34, 211, 238, 0.1);
       border: 1px solid rgba(34, 211, 238, 0.3);
@@ -130,7 +166,7 @@
       transition: 0.2s;
     }
     .btn-details:hover { background: rgba(34, 211, 238, 0.25); color: #fff; }
-
+ 
     /* Modal Styles */
     .modal-overlay {
       display: none;
@@ -177,7 +213,7 @@
   </style>
 </head>
 <body>
-
+ 
   <!-- Login Overlay Section -->
   <div id="loginView" style="display: flex; position: fixed; inset: 0; z-index: 10000; background: #0a0714; align-items: center; justify-content: center; padding: 1rem;">
     <div style="background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.18); padding: 2rem; border-radius: 16px; max-width: 400px; width: 100%; text-align: center;">
@@ -185,7 +221,9 @@
       <p style="color: #9b93ae; font-size: 0.85rem; margin-bottom: 1.5rem;">Enter security password to access dashboard</p>
       
       <form onsubmit="handleAdminLogin(event)">
-        <input type="password" id="adminPassInput" placeholder="Enter Password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-family: monospace; font-size: 1rem; margin-bottom: 1rem; outline: none;">
+        <input type="email" id="adminEmailInput" placeholder="Enter Admin Email" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.9rem; margin-bottom: 0.8rem; outline: none;">
+        
+        <input type="password" id="adminPassInput" placeholder="Enter Password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.9rem; margin-bottom: 1rem; outline: none;">
         
         <p id="loginErrorMsg" style="color: #ff4d4d; font-size: 0.85rem; display: none; margin-bottom: 1rem;"></p>
         
@@ -193,23 +231,28 @@
       </form>
     </div>
   </div>
-
+ 
   <!-- Main Dashboard Container (Hidden by default using style="display:none;") -->
   <div class="container" id="dashView" style="display: none;">
     <div class="header">
       <div class="brand">VUPC <span>Admin Portal</span></div>
       <div class="header-actions">
-        <button class="btn-action btn-csv" onclick="exportToCSV()">📥 Export CSV</button>
+        <button class="btn-action btn-csv" onclick="exportToExcel()">📥 Export Excel</button>
         <a href="index.html" class="btn-action">← Back to Site</a>
       </div>
     </div>
-
+ 
     <div class="stats-grid">
       <div class="stat-card"><b id="statTotal">0</b><span>Total Teams</span></div>
       <div class="stat-card"><b id="statActive">0</b><span>Verified Teams</span></div>
       <div class="stat-card"><b id="statPending">0</b><span>Pending Teams</span></div>
     </div>
-
+ 
+    <div class="search-bar">
+      <input type="text" id="searchInput" oninput="filterTeams()" placeholder="Search by team, email, member name, student ID, mobile or trx ID...">
+      <div class="search-meta" id="searchMeta"></div>
+    </div>
+ 
     <div class="table-card">
       <table>
         <thead>
@@ -229,7 +272,7 @@
       </table>
     </div>
   </div>
-
+ 
   <!-- Team Details Modal -->
   <div class="modal-overlay" id="detailsModal">
     <div class="modal-content">
@@ -238,90 +281,164 @@
       <div id="modalBodyContent"></div>
     </div>
   </div>
-
+ 
   <script>
-    // ১. আপনার অ্যাডমিন পাসওয়ার্ড
-    const ADMIN_PASSWORD = "vupc_admin_2026"; 
-
-    // ২. পেজ লোড হওয়ার পর নিশ্চিত করা যে ড্যাশবোর্ড লুকানো আছে এবং লগইন পপ-আপ চালু আছে
+    // পেজ লোড হলে: সেভ করা টোকেন থাকলে সরাসরি ড্যাশবোর্ড, না থাকলে লগইন ফর্ম দেখাবে।
+    // (আগে এখানে দুইটা সাংঘর্ষিক DOMContentLoaded লিসেনার ছিল, একটায় করা হলো)
     document.addEventListener("DOMContentLoaded", function() {
       const loginView = document.getElementById("loginView");
       const dashView = document.getElementById("dashView");
-      
-      if (dashView) dashView.style.display = "none";
-      if (loginView) loginView.style.display = "flex";
-    });
-
-    // ৩. পাসওয়ার্ড চেক ও ড্যাশবোর্ড আনলক করার ফাংশন
-    function handleAdminLogin(event) {
-      if (event) event.preventDefault();
-
-      const inputPass = document.getElementById("adminPassInput").value.trim();
-      const errorMsg = document.getElementById("loginErrorMsg");
-
-      if (inputPass === ADMIN_PASSWORD) {
-        document.getElementById("loginView").style.display = "none";
-        document.getElementById("dashView").style.display = "block";
-        
-        // পাসওয়ার্ড সঠিক হলেই ফায়ারবেস থেকে ডাটা আনা শুরু হবে
+      const token = localStorage.getItem('adminToken');
+ 
+      if (token) {
+        if (loginView) loginView.style.display = "none";
+        if (dashView) dashView.style.display = "block";
         fetchLiveTeams();
       } else {
-        if (errorMsg) {
-          errorMsg.textContent = "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।";
-          errorMsg.style.display = "block";
+        if (dashView) dashView.style.display = "none";
+        if (loginView) loginView.style.display = "flex";
+      }
+    });
+ 
+    // ২. ব্যাকএন্ডের সিকিউর API-তে হিট পাঠিয়ে লগইন ভ্যালিডেশন
+    async function handleAdminLogin(event) {
+      if (event) event.preventDefault();
+ 
+      const email = document.getElementById("adminEmailInput").value.trim();
+      const password = document.getElementById("adminPassInput").value;
+      const errorMsg = document.getElementById("loginErrorMsg");
+ 
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+ 
+        const responseText = await res.text();
+        let data = {};
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          throw new Error(`The server returned HTTP ${res.status}.`);
+        }
+ 
+        if (res.ok && data.success) {
+          // সিকিউর টোকেন ব্রাউজারে সেভ রাখা
+          localStorage.setItem('adminToken', data.token);
+          
+          document.getElementById("loginView").style.display = "none";
+          document.getElementById("dashView").style.display = "block";
+          
+          fetchLiveTeams();
         } else {
-          alert("ভুল পাসওয়ার্ড!");
+          if (errorMsg) {
+            errorMsg.textContent = data.message || data.error || "Admin login failed. Please try again.";
+            errorMsg.style.display = "block";
+          }
+        }
+      } catch (err) {
+        if (errorMsg) {
+          errorMsg.textContent = err.message || "Can't connect to the server. Please try again later.";
+          errorMsg.style.display = "block";
         }
       }
     }
-
-    const FIREBASE_BASE_URL = 'https://vupc-official-web-default-rtdb.firebaseio.com/teams';
+ 
     let teamsData = [];
-
+    let filteredData = [];
+ 
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[char]));
+    }
+ 
     // ফায়ারবেস থেকে লাইভ ডাটা আনা
     async function fetchLiveTeams() {
       try {
-        const res = await fetch(`${FIREBASE_BASE_URL}.json`);
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/admin/teams', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (res.ok) {
-          const data = await res.json();
-          teamsData = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+          teamsData = await res.json();
           renderDashboard();
+        } else if (res.status === 401) {
+          localStorage.removeItem('adminToken');
+          document.getElementById("dashView").style.display = "none";
+          document.getElementById("loginView").style.display = "flex";
         }
       } catch (err) {
         console.error("Firebase fetch error:", err);
       }
     }
-
+ 
     // টেবিল ও ড্যাশবোর্ড রেন্ডার করা
     function renderDashboard() {
       const totalTeams = teamsData.length;
       const activeCount = teamsData.filter(t => t.status === 'Active' || t.status === 'Verified').length;
       const pendingCount = totalTeams - activeCount;
-
+ 
       document.getElementById('statTotal').textContent = totalTeams;
       document.getElementById('statActive').textContent = activeCount;
       document.getElementById('statPending').textContent = pendingCount;
-
+ 
+      // নতুন করে ডাটা এলে সার্চ বক্সের যা কিছু টাইপ করা ছিল সেই অনুযায়ী আবার ফিল্টার করা হয়
+      filterTeams();
+    }
+ 
+    // সার্চ বক্সে টাইপ করলে টিম নাম, ইমেইল, মেম্বারদের নাম/আইডি/মোবাইল, ট্রানজেকশন আইডি ইত্যাদির উপর ফিল্টার করে
+    function filterTeams() {
+      const input = document.getElementById('searchInput');
+      const query = (input ? input.value : '').trim().toLowerCase();
+ 
+      if (!query) {
+        filteredData = teamsData;
+      } else {
+        filteredData = teamsData.filter(t => {
+          const members = (t.details && t.details.membersFull) || [];
+          const haystack = [
+            t.name, t.teamName, t.email, t.contactEmail, t.gateway,
+            t.trx, t.trxId, t.trxPhone, t.contactPhone, t.status,
+            ...members.flatMap(m => [m.name, m.id, m.email, m.mobile, m.semester])
+          ].filter(Boolean).join(' ').toLowerCase();
+          return haystack.includes(query);
+        });
+      }
+ 
+      const meta = document.getElementById('searchMeta');
+      if (meta) {
+        meta.textContent = query
+          ? `Showing ${filteredData.length} of ${teamsData.length} teams`
+          : '';
+      }
+ 
+      renderTable(filteredData);
+    }
+ 
+    function renderTable(rows) {
       const tbody = document.getElementById("teamsTbody");
       if (!tbody) return;
-
-      if (teamsData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-faint);">No teams registered yet.</td></tr>`;
+ 
+      if (rows.length === 0) {
+        const message = teamsData.length === 0 ? 'No teams registered yet.' : 'No teams match your search.';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-faint);">${message}</td></tr>`;
         return;
       }
-
-      tbody.innerHTML = teamsData.map(t => {
+ 
+      tbody.innerHTML = rows.map(t => {
         const isActive = t.status === 'Active' || t.status === 'Verified';
         const statusClass = isActive ? 'active' : 'pending';
         const statusText = isActive ? 'Active' : 'Pending';
         
         return `
           <tr>
-            <td><strong>${t.name || t.teamName || 'N/A'}</strong></td>
-            <td>${t.email || t.contactEmail || 'N/A'}</td>
-            <td>${t.members ? (typeof t.members === 'string' ? t.members : '3 Members') : '3 Members'}</td>
-            <td>${t.gateway || 'bKash'}</td>
-            <td>${t.trx || t.trxId || 'N/A'}</td>
+            <td><strong>${escapeHtml(t.name || t.teamName || 'N/A')}</strong></td>
+            <td>${escapeHtml(t.email || t.contactEmail || 'N/A')}</td>
+            <td>${escapeHtml(t.members ? (typeof t.members === 'string' ? t.members : '3 Members') : '3 Members')}</td>
+            <td>${escapeHtml(t.gateway || 'bKash')}</td>
+            <td>${escapeHtml(t.trx || t.trxId || 'N/A')}</td>
             <td>
               <span onclick="toggleVerification('${t.id}', '${statusText}')" class="badge-status ${statusClass}" title="Click to toggle status">
                 ${statusText}
@@ -336,14 +453,18 @@
         `;
       }).join("");
     }
-
+ 
     // স্ট্যাটাস টগল (Active <-> Pending)
     async function toggleVerification(teamId, currentStatus) {
       const newStatus = currentStatus === 'Active' ? 'Pending' : 'Active';
       try {
-        const res = await fetch(`${FIREBASE_BASE_URL}/${teamId}.json`, {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch(`/api/admin/teams/${encodeURIComponent(teamId)}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
           body: JSON.stringify({ status: newStatus })
         });
         if (res.ok) {
@@ -355,84 +476,105 @@
         console.error("Status update error:", err);
       }
     }
-
+ 
     // টিম ডিটেইলস পপ-আপ
     function showTeamDetails(teamId) {
       const team = teamsData.find(t => t.id === teamId);
       if (!team) return;
-
+      const safe = value => escapeHtml(value || 'N/A');
+ 
       document.getElementById("modalTeamName").textContent = team.name || team.teamName || "Team Details";
       
       const details = team.details || team.detail || {};
       const membersList = details.membersFull || [];
-
+ 
       let membersHtml = '';
       if (membersList.length > 0) {
         membersHtml = membersList.map((m, i) => `
           <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:0.9rem; border-radius:10px; margin-bottom:0.7rem;">
             <div style="color:var(--amber); font-family:var(--font-mono); font-size:0.75rem; font-weight:bold; margin-bottom:0.4rem;">MEMBER ${i + 1}</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem; font-size:0.85rem; color:var(--text-dim);">
-              <div><strong style="color:var(--text)">Name:</strong> ${m.name || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Student ID:</strong> ${m.id || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Semester:</strong> ${m.semester || 'N/A'}</div>
-              <div><strong style="color:var(--text)">T-Shirt Size:</strong> ${m.size || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Mobile:</strong> ${m.mobile || 'N/A'}</div>
-              <div><strong style="color:var(--text)">Email:</strong> ${m.email || 'N/A'}</div>
+              <div><strong style="color:var(--text)">Name:</strong> ${safe(m.name)}</div>
+              <div><strong style="color:var(--text)">Student ID:</strong> ${safe(m.id)}</div>
+              <div><strong style="color:var(--text)">Semester:</strong> ${safe(m.semester)}</div>
+              <div><strong style="color:var(--text)">T-Shirt Size:</strong> ${safe(m.size)}</div>
+              <div><strong style="color:var(--text)">Mobile:</strong> ${safe(m.mobile)}</div>
+              <div><strong style="color:var(--text)">Email:</strong> ${safe(m.email)}</div>
             </div>
           </div>
         `).join('');
       } else {
-        membersHtml = `<p style="color:var(--text-dim);">Summary: ${team.members || 'N/A'}</p>`;
+        membersHtml = `<p style="color:var(--text-dim);">Summary: ${safe(team.members)}</p>`;
       }
-
+ 
       const modalBody = document.getElementById("modalBodyContent");
       modalBody.innerHTML = `
         <div style="margin-bottom:1.2rem; background:rgba(124,92,245,0.1); border:1px solid rgba(124,92,245,0.3); padding:1rem; border-radius:10px; font-size:0.88rem;">
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Person:</strong> ${details.contactPerson || details.contact || 'N/A'}</div>
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Phone:</strong> ${team.contactPhone || team.trxPhone || 'N/A'}</div>
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Payment Method:</strong> ${team.gateway || 'N/A'}</div>
-          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Transaction ID:</strong> ${team.trx || team.trxId || 'N/A'}</div>
-          <div><strong style="color:var(--text)">Registration Time:</strong> ${team.createdAt ? new Date(team.createdAt).toLocaleString() : 'N/A'}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Person:</strong> ${safe(details.contactPerson || details.contact)}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Contact Phone:</strong> ${safe(team.contactPhone || team.trxPhone)}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Payment Method:</strong> ${safe(team.gateway)}</div>
+          <div style="margin-bottom:0.3rem;"><strong style="color:var(--text)">Transaction ID:</strong> ${safe(team.trx || team.trxId)}</div>
+          <div><strong style="color:var(--text)">Registration Time:</strong> ${safe(team.createdAt ? new Date(team.createdAt).toLocaleString() : 'N/A')}</div>
         </div>
         <h4 style="font-size:0.95rem; font-family:var(--font-mono); margin-bottom:0.7rem; color:var(--cyan); text-transform:uppercase;">Full Member Information:</h4>
         ${membersHtml}
       `;
-
+ 
       document.getElementById("detailsModal").classList.add("show");
     }
-
+ 
     function closeDetailsModal() {
       document.getElementById("detailsModal").classList.remove("show");
     }
-
-    // CSV এক্সপোর্ট ফাংশন
-    function exportToCSV() {
+ 
+    // এক্সেল (.xlsx) এক্সপোর্ট ফাংশন — সম্পূর্ণ ডাটা দুইটা শিটে (Teams সামারি + Members ডিটেইল)
+    function exportToExcel() {
       if (teamsData.length === 0) {
         alert("No team data to export!");
         return;
       }
-
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Team Name,Contact Email,Gateway,Transaction ID,Status,Members\n";
-
-      teamsData.forEach(t => {
-        const teamName = `"${(t.name || t.teamName || '').replace(/"/g, '""')}"`;
-        const email = `"${(t.email || t.contactEmail || '').replace(/"/g, '""')}"`;
-        const gateway = `"${(t.gateway || '').replace(/"/g, '""')}"`;
-        const trx = `"${(t.trx || t.trxId || '').replace(/"/g, '""')}"`;
-        const status = `"${(t.status || 'Pending').replace(/"/g, '""')}"`;
-        const members = `"${(t.members || '').replace(/"/g, '""')}"`;
-
-        csvContent += `${teamName},${email},${gateway},${trx},${status},${members}\n`;
+      if (typeof XLSX === 'undefined') {
+        alert("Excel export library didn't load yet — please try again in a moment.");
+        return;
+      }
+ 
+      // শিট ১: প্রতিটি টিমের সামারি (বর্তমানে সার্চে যা দেখানো হচ্ছে সেটাই এক্সপোর্ট হবে)
+      const source = filteredData.length ? filteredData : teamsData;
+      const teamsSheetData = source.map(t => ({
+        'Team Name': t.name || t.teamName || 'N/A',
+        'Contact Email': t.email || t.contactEmail || 'N/A',
+        'Contact Phone': t.contactPhone || t.trxPhone || 'N/A',
+        'Payment Method': t.gateway || 'N/A',
+        'Transaction ID': t.trx || t.trxId || 'N/A',
+        'Status': t.status || 'Pending',
+        'Registered At': t.createdAt ? new Date(t.createdAt).toLocaleString() : 'N/A'
+      }));
+ 
+      // শিট ২: প্রতিটি মেম্বারের পূর্ণ তথ্য, এক রো তে এক মেম্বার
+      const membersSheetData = [];
+      source.forEach(t => {
+        const members = (t.details && t.details.membersFull) || [];
+        members.forEach((m, i) => {
+          membersSheetData.push({
+            'Team Name': t.name || t.teamName || 'N/A',
+            'Member #': i + 1,
+            'Name': m.name || 'N/A',
+            'Student ID': m.id || 'N/A',
+            'Semester': m.semester || 'N/A',
+            'Mobile': m.mobile || 'N/A',
+            'Email': m.email || 'N/A',
+            'T-Shirt Size': m.size || 'N/A'
+          });
+        });
       });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `VUPC_Teams_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+ 
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(teamsSheetData), 'Teams');
+      if (membersSheetData.length) {
+        XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(membersSheetData), 'Members');
+      }
+ 
+      XLSX.writeFile(workbook, `VUPC_Teams_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
   </script>
 </body>
