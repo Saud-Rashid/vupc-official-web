@@ -596,7 +596,7 @@
     font-weight:600;
     margin-bottom:1.4rem;
     letter-spacing:.02em;
-    text-shadow:0 2px 4px rgba(0,0,0,0.8);
+    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8);
   }
   .hero p.desc{
     color:var(--text-dim);
@@ -860,9 +860,10 @@
     font-size:.82rem;
     color:var(--text-dim);
     flex:1 1 200px;
+    min-width:0;
   }
-  .pay-number-row{display:flex;align-items:center;gap:.6rem;flex:none;}
-  .pay-number{font-family:var(--font-mono);font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:.02em;}
+  .pay-number-row{display:flex;align-items:center;gap:.6rem;flex:1 1 auto;min-width:0;flex-wrap:wrap;}
+  .pay-number{font-family:var(--font-mono);font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:.02em;word-break:break-word;}
   .success-box{
     display:none;
     text-align:center;
@@ -1912,7 +1913,48 @@ Form your team, harness your technical prowess, and chart a path through high-st
       errors: {},
     };
   }
-  let wiz = freshWizState();
+  // ---- draft autosave -------------------------------------------------
+  // The wizard used to live only in the `wiz` JS variable, which exists
+  // purely in memory. Anything that forces the page to reload — the OS
+  // killing the tab after it's swiped away in the recent-apps list, a
+  // mobile browser's "Request Desktop Site" toggle (which reloads with a
+  // different viewport/UA), rotating in some browsers, etc. — wiped it
+  // completely, even though the person never chose to clear anything.
+  // We now mirror `wiz` into localStorage on every change and rehydrate
+  // from it on load, so a reload resumes exactly where the person left
+  // off. The draft is only cleared once a registration is submitted
+  // successfully.
+  const WIZ_STORAGE_KEY = 'codeharbor2026_reg_draft_v1';
+
+  function saveWizState(){
+    try{
+      const { errors, ...toSave } = wiz;
+      localStorage.setItem(WIZ_STORAGE_KEY, JSON.stringify(toSave));
+    }catch(err){
+      // Private browsing / storage disabled / quota full — autosave is a
+      // nice-to-have, so fail silently rather than breaking the wizard.
+    }
+  }
+
+  function clearWizState(){
+    try{ localStorage.removeItem(WIZ_STORAGE_KEY); }catch(err){}
+  }
+
+  function loadWizState(){
+    try{
+      const raw = localStorage.getItem(WIZ_STORAGE_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      // Sanity-check the shape so a corrupted or stale value can never
+      // crash the wizard — fall back to a fresh state instead.
+      if(!parsed || !Array.isArray(parsed.members) || parsed.members.length !== 3) return null;
+      return Object.assign(freshWizState(), parsed, { errors:{} });
+    }catch(err){
+      return null;
+    }
+  }
+
+  let wiz = loadWizState() || freshWizState();
   let wizLastReceipt = null;
 
   function wizValidate(stepIdx){
@@ -2157,7 +2199,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
 
   function attachWizardFieldListeners(){
     const teamNameInput = document.getElementById('teamNameInput');
-    if(teamNameInput) teamNameInput.addEventListener('input', e=>{ wiz.teamName = e.target.value; });
+    if(teamNameInput) teamNameInput.addEventListener('input', e=>{ wiz.teamName = e.target.value; saveWizState(); });
 
     document.querySelectorAll('#stepContent [data-m]').forEach(el=>{
       const handler = e=>{
@@ -2168,18 +2210,20 @@ Form your team, harness your technical prowess, and chart a path through high-st
           if(e.target.value !== val) e.target.value = val;
         }
         wiz.members[i][k] = val;
+        saveWizState();
       };
       el.addEventListener('input', handler);
       el.addEventListener('change', handler);
     });
 
     document.querySelectorAll('[data-contact]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ wiz.contact = btn.dataset.contact; renderStepContent(); });
+      btn.addEventListener('click', ()=>{ wiz.contact = btn.dataset.contact; renderStepContent(); saveWizState(); });
     });
     document.querySelectorAll('[data-paymethod]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         wiz.payMethod = btn.dataset.paymethod;
         renderStepContent();
+        saveWizState();
       });
     });
     const copyPayNumberBtn = document.getElementById('copyPayNumberBtn');
@@ -2190,14 +2234,14 @@ Form your team, harness your technical prowess, and chart a path through high-st
       setTimeout(()=>{ copyPayNumberBtn.innerHTML = original; }, 1200);
     });
     const contactOtherNameInput = document.getElementById('contactOtherNameInput');
-    if(contactOtherNameInput) contactOtherNameInput.addEventListener('input', e=>{ wiz.contactOtherName = e.target.value; });
+    if(contactOtherNameInput) contactOtherNameInput.addEventListener('input', e=>{ wiz.contactOtherName = e.target.value; saveWizState(); });
     const txnIdInput = document.getElementById('txnIdInput');
-    if(txnIdInput) txnIdInput.addEventListener('input', e=>{ wiz.txnId = e.target.value; });
+    if(txnIdInput) txnIdInput.addEventListener('input', e=>{ wiz.txnId = e.target.value; saveWizState(); });
     const txnPhoneInput = document.getElementById('txnPhoneInput');
-    if(txnPhoneInput) txnPhoneInput.addEventListener('input', e=>{ wiz.txnPhone = e.target.value; });
+    if(txnPhoneInput) txnPhoneInput.addEventListener('input', e=>{ wiz.txnPhone = e.target.value; saveWizState(); });
 
     const agreeInput = document.getElementById('agreeInput');
-    if(agreeInput) agreeInput.addEventListener('change', e=>{ wiz.agree = e.target.checked; });
+    if(agreeInput) agreeInput.addEventListener('change', e=>{ wiz.agree = e.target.checked; saveWizState(); });
   }
 
   function renderWizard(){
@@ -2208,6 +2252,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
     backBtn.disabled = wiz.step===0;
     nextBtn.disabled = false;
     nextBtn.innerHTML = wiz.step<3 ? 'Next →' : 'Submit Registration';
+    saveWizState();
   }
 
   // ---- mobile fix: every step re-renders #stepContent from scratch, and each
@@ -2296,6 +2341,8 @@ Form your team, harness your technical prowess, and chart a path through high-st
       btn.innerHTML = 'Submit Registration';
       return;
     }
+
+    clearWizState();
 
     // ৩. পূর্বের PDF ডাউনলোড ও Success Modal লজিক
     {
