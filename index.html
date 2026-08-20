@@ -373,6 +373,13 @@
     row-gap:.6rem;
     column-gap:1.4rem;
   }
+  .bs-logos{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:nowrap;
+    column-gap:1.4rem;
+  }
   .bs-divider-v{
     width:1px;
     align-self:stretch;
@@ -455,12 +462,15 @@
   }
   @media (max-width:640px){
     .brand-strip{column-gap:.8rem;padding:.75rem 14px;}
-    .bs-logo-slot{height:34px;width:72px;}
+    .bs-group{column-gap:.6rem;}
+    .bs-logos{column-gap:.7rem;}
+    .bs-logo-slot{height:32px;width:60px;}
     .sponsor-slot{height:34px;padding:0 .7rem;}
     .sponsor-slot img{height:24px;}
     .sponsor-logo-chip{height:36px;}
     .sponsor-logo-chip img{max-width:100px;}
     .bs-divider-v{display:none;}
+    .bs-sep{display:none;}
   }
 
   /* ============ HERO SPONSOR STRIP (under theme line) ============ */
@@ -555,6 +565,21 @@
     0%,100%{opacity:1;}
     50%{opacity:.35;}
   }
+  /* ============ HERO PRESENTS ROW ============ */
+  .hero-presents{
+    display:flex;
+    align-items:center;
+    gap:.65rem;
+    margin-bottom:1.4rem;
+    flex-wrap:wrap;
+  }
+  .hero-presents-text{
+    font-family:var(--font-mono);
+    font-size:1.1rem;
+    color:var(--text-dim);
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
   .hero h1{
     font-family:var(--font-display);
     font-weight:700;
@@ -571,7 +596,7 @@
     font-weight:600;
     margin-bottom:1.4rem;
     letter-spacing:.02em;
-    text-shadow:0 2px 4px rgba(0,0,0,0.8);
+    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8);
   }
   .hero p.desc{
     color:var(--text-dim);
@@ -835,9 +860,10 @@
     font-size:.82rem;
     color:var(--text-dim);
     flex:1 1 200px;
+    min-width:0;
   }
-  .pay-number-row{display:flex;align-items:center;gap:.6rem;flex:none;}
-  .pay-number{font-family:var(--font-mono);font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:.02em;}
+  .pay-number-row{display:flex;align-items:center;gap:.6rem;flex:1 1 auto;min-width:0;flex-wrap:wrap;}
+  .pay-number{font-family:var(--font-mono);font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:.02em;word-break:break-word;}
   .success-box{
     display:none;
     text-align:center;
@@ -1258,11 +1284,13 @@
     <div class="bs-group">
       <span class="bs-label">organized by</span>
 
-      <div class="bs-logo-slot"><img src="assets/vupc-logo.png" alt="VUPC — Varendra University Programming Club logo"></div>
-
-      <div class="bs-sep"></div>
-
-      <div class="bs-logo-slot"><img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo"></div>
+      <div class="bs-logos">
+        <div class="bs-logo-slot"><img src="assets/vupc-logo.png" alt="VUPC — Varendra University Programming Club logo"></div>
+        <div class="bs-sep"></div>
+        <div class="bs-logo-slot"><img src="assets/dept-logo.png" alt="Department of CSE, Varendra University logo"></div>
+        <div class="bs-sep"></div>
+        <div class="bs-logo-slot"><img src="assets/amc_logo.png" alt="Department of CSE, Varendra University logo"></div>
+      </div>
 
     </div>
   </div>
@@ -1285,9 +1313,13 @@
     <div class="wrap hero-grid">
       <div>
         <div class="badge"><span class="pulse"></span> Season 5 is here</div>
+
+        <div class="hero-presents">
+          <span class="hero-presents-text">American Corner presents — </span>
+        </div>
+
         <h1>CODE <span class="grad-text">HARBOR</span></h1>
         <div class="theme-line">Navigating Challenges — Season 5</div>
-
             <!-- SPONSOR: Phitron -->
         <div class="hero-sponsor">
           <span class="bs-label">Powered by</span>
@@ -1301,8 +1333,8 @@ Form your team, harness your technical prowess, and chart a path through high-st
 
         <div class="stats-row">
           <div class="stat"><b>3</b><span>Members / Team</span></div>
-          <div class="stat"><b>200+</b><span>Participants Expected</span></div>
-          <div class="stat"><b>৳15,000+</b><span>Prize Pool</span></div>
+          <div class="stat"><b>900+</b><span>Participants Expected</span></div>
+          <div class="stat"><b>৳20,000+</b><span>Prize Pool</span></div>
         </div>
 
         <div class="cta-row">
@@ -1575,7 +1607,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
         <div class="panel-body" style="padding:1.6rem 1.6rem 1.8rem">
           <div class="fee-strip" style="margin-top:0">
             <span class="fee-amt">Registration Fee: ৳510/team</span>
-            <span class="fee-note">Includes Certificate, T-shirts, Lunch, Snacks &amp; more</span>
+            <span class="fee-note">Includes Certificate, T-shirts, Notebook, Lunch, Snacks &amp; more</span>
           </div>
         </div>
       </div>
@@ -1896,7 +1928,48 @@ Form your team, harness your technical prowess, and chart a path through high-st
       errors: {},
     };
   }
-  let wiz = freshWizState();
+  // ---- draft autosave -------------------------------------------------
+  // The wizard used to live only in the `wiz` JS variable, which exists
+  // purely in memory. Anything that forces the page to reload — the OS
+  // killing the tab after it's swiped away in the recent-apps list, a
+  // mobile browser's "Request Desktop Site" toggle (which reloads with a
+  // different viewport/UA), rotating in some browsers, etc. — wiped it
+  // completely, even though the person never chose to clear anything.
+  // We now mirror `wiz` into localStorage on every change and rehydrate
+  // from it on load, so a reload resumes exactly where the person left
+  // off. The draft is only cleared once a registration is submitted
+  // successfully.
+  const WIZ_STORAGE_KEY = 'codeharbor2026_reg_draft_v1';
+
+  function saveWizState(){
+    try{
+      const { errors, ...toSave } = wiz;
+      localStorage.setItem(WIZ_STORAGE_KEY, JSON.stringify(toSave));
+    }catch(err){
+      // Private browsing / storage disabled / quota full — autosave is a
+      // nice-to-have, so fail silently rather than breaking the wizard.
+    }
+  }
+
+  function clearWizState(){
+    try{ localStorage.removeItem(WIZ_STORAGE_KEY); }catch(err){}
+  }
+
+  function loadWizState(){
+    try{
+      const raw = localStorage.getItem(WIZ_STORAGE_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      // Sanity-check the shape so a corrupted or stale value can never
+      // crash the wizard — fall back to a fresh state instead.
+      if(!parsed || !Array.isArray(parsed.members) || parsed.members.length !== 3) return null;
+      return Object.assign(freshWizState(), parsed, { errors:{} });
+    }catch(err){
+      return null;
+    }
+  }
+
+  let wiz = loadWizState() || freshWizState();
   let wizLastReceipt = null;
 
   function wizValidate(stepIdx){
@@ -2141,7 +2214,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
 
   function attachWizardFieldListeners(){
     const teamNameInput = document.getElementById('teamNameInput');
-    if(teamNameInput) teamNameInput.addEventListener('input', e=>{ wiz.teamName = e.target.value; });
+    if(teamNameInput) teamNameInput.addEventListener('input', e=>{ wiz.teamName = e.target.value; saveWizState(); });
 
     document.querySelectorAll('#stepContent [data-m]').forEach(el=>{
       const handler = e=>{
@@ -2152,18 +2225,20 @@ Form your team, harness your technical prowess, and chart a path through high-st
           if(e.target.value !== val) e.target.value = val;
         }
         wiz.members[i][k] = val;
+        saveWizState();
       };
       el.addEventListener('input', handler);
       el.addEventListener('change', handler);
     });
 
     document.querySelectorAll('[data-contact]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ wiz.contact = btn.dataset.contact; renderStepContent(); });
+      btn.addEventListener('click', ()=>{ wiz.contact = btn.dataset.contact; renderStepContent(); saveWizState(); });
     });
     document.querySelectorAll('[data-paymethod]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         wiz.payMethod = btn.dataset.paymethod;
         renderStepContent();
+        saveWizState();
       });
     });
     const copyPayNumberBtn = document.getElementById('copyPayNumberBtn');
@@ -2174,14 +2249,14 @@ Form your team, harness your technical prowess, and chart a path through high-st
       setTimeout(()=>{ copyPayNumberBtn.innerHTML = original; }, 1200);
     });
     const contactOtherNameInput = document.getElementById('contactOtherNameInput');
-    if(contactOtherNameInput) contactOtherNameInput.addEventListener('input', e=>{ wiz.contactOtherName = e.target.value; });
+    if(contactOtherNameInput) contactOtherNameInput.addEventListener('input', e=>{ wiz.contactOtherName = e.target.value; saveWizState(); });
     const txnIdInput = document.getElementById('txnIdInput');
-    if(txnIdInput) txnIdInput.addEventListener('input', e=>{ wiz.txnId = e.target.value; });
+    if(txnIdInput) txnIdInput.addEventListener('input', e=>{ wiz.txnId = e.target.value; saveWizState(); });
     const txnPhoneInput = document.getElementById('txnPhoneInput');
-    if(txnPhoneInput) txnPhoneInput.addEventListener('input', e=>{ wiz.txnPhone = e.target.value; });
+    if(txnPhoneInput) txnPhoneInput.addEventListener('input', e=>{ wiz.txnPhone = e.target.value; saveWizState(); });
 
     const agreeInput = document.getElementById('agreeInput');
-    if(agreeInput) agreeInput.addEventListener('change', e=>{ wiz.agree = e.target.checked; });
+    if(agreeInput) agreeInput.addEventListener('change', e=>{ wiz.agree = e.target.checked; saveWizState(); });
   }
 
   function renderWizard(){
@@ -2192,6 +2267,7 @@ Form your team, harness your technical prowess, and chart a path through high-st
     backBtn.disabled = wiz.step===0;
     nextBtn.disabled = false;
     nextBtn.innerHTML = wiz.step<3 ? 'Next →' : 'Submit Registration';
+    saveWizState();
   }
 
   // ---- mobile fix: every step re-renders #stepContent from scratch, and each
@@ -2280,6 +2356,8 @@ Form your team, harness your technical prowess, and chart a path through high-st
       btn.innerHTML = 'Submit Registration';
       return;
     }
+
+    clearWizState();
 
     // ৩. পূর্বের PDF ডাউনলোড ও Success Modal লজিক
     {
