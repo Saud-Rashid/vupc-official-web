@@ -855,6 +855,11 @@
   }
   .success-box h4{font-family:var(--font-display);font-size:1.3rem;margin-bottom:.5rem;}
   .success-box p{color:var(--text-dim);font-size:.95rem;}
+  .success-box .tick.tick-closed{
+    background:rgba(251,113,133,0.12);
+    border-color:rgba(251,113,133,0.4);
+    color:var(--red);
+  }
 
   /* ---- multi-step registration wizard ---- */
   .stepper{display:flex;align-items:center;gap:6px;margin-bottom:2.2rem;}
@@ -1579,18 +1584,28 @@ Form your team, harness your technical prowess, and chart a path through high-st
         <div class="panel-head"><span></span><span></span><span></span><em> — Registration </em></div>
         <div class="panel-body">
 
-          <p class="form-hint">Complete all four steps to receive your team's registration ID — a PDF receipt with everything you entered downloads automatically once you're done.</p>
+          <div id="regWizardActive">
+            <p class="form-hint">Complete all four steps to receive your team's registration ID — a PDF receipt with everything you entered downloads automatically once you're done.</p>
 
-          <div class="stepper" id="stepper"></div>
+            <div class="stepper" id="stepper"></div>
 
-          <form id="regForm" novalidate>
-            <div id="stepContent"></div>
+            <form id="regForm" novalidate>
+              <div id="stepContent"></div>
 
-            <div class="wizard-actions">
-              <button type="button" class="btn btn-back" id="backBtn">← Back</button>
-              <button type="submit" class="btn btn-primary" id="nextBtn">Next →</button>
+              <div class="wizard-actions">
+                <button type="button" class="btn btn-back" id="backBtn">← Back</button>
+                <button type="submit" class="btn btn-primary" id="nextBtn">Next →</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="success-box" id="regClosedBox">
+            <div class="tick tick-closed">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
             </div>
-          </form>
+            <h4>Registration Closed</h4>
+            <p>Team registration for Code Harbor Navigating Challenges — Season 5 2026 is now closed. Thanks to everyone who signed up — see you on contest day!</p>
+          </div>
 
         </div>
       </div>
@@ -2462,7 +2477,18 @@ Form your team, harness your technical prowess, and chart a path through high-st
     }
   });
 
-  renderWizard();
+  // ---- registration open/close switch ----
+  // Set REGISTRATION_OPEN back to true to re-open the form.
+  const REGISTRATION_OPEN = false;
+
+  if (REGISTRATION_OPEN) {
+    document.getElementById('regWizardActive').style.display = '';
+    document.getElementById('regClosedBox').classList.remove('show');
+    renderWizard();
+  } else {
+    document.getElementById('regWizardActive').style.display = 'none';
+    document.getElementById('regClosedBox').classList.add('show');
+  }
 
   // ---- blog read more accordion ----
   document.querySelectorAll('.read-more-btn').forEach(btn => {
